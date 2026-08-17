@@ -65,6 +65,8 @@ a {
   justify-content: center;
   position: relative;
   background: linear-gradient(160deg, #e8e0d4 0%, #d4c8b8 100%);
+  background-size: cover;
+  background-position: center;
   overflow: hidden;
 }
 
@@ -189,6 +191,27 @@ a {
 /* ========================================
    Details
    ======================================== */
+
+.detail-image-wrapper {
+  margin-bottom: 40px;
+  border-radius: 4px;
+  overflow: hidden;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.detail-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: saturate(0.85);
+  transition: filter 0.4s;
+}
+
+.detail-image-wrapper:hover .detail-image {
+  filter: saturate(1);
+}
 
 .detail-card {
   margin-bottom: 32px;

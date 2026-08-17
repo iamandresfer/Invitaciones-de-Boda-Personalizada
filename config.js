@@ -14,6 +14,8 @@ const EVENTO = {
   },
   dressCode: "Formal / Elegante",
   mensajeNovios: "Los novios le invitan a usted a compartir un momento especial en nuestras vidas.",
+  heroImage: "src/assets/images/hero.jpg",
+  detailImage: "src/assets/images/detail.jpg",
   urlBase: "https://gloria-y-juan.vercel.app",
   rsvpEndpoint: "TU_URL_DE_APPS_SCRIPT_WEB_APP_AQUI"
 };
