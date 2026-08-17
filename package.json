@@ -1,0 +1,10 @@
+{
+  "name": "boda-gloria-y-juan",
+  "version": "1.0.0",
+  "description": "Invitaciones digitales para la boda de Gloria Valarezo y Juan Navas",
+  "scripts": {
+    "generar": "node scripts/generar-invitaciones.js",
+    "preview": "npx serve ."
+  },
+  "private": true
+}
