@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gloria & Juan te invitan, Maria Lopez</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Great+Vibes&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="../src/styles.css">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Gloria & Juan te invitan, Maria Lopez">
+  <meta property="og:description" content="Estas invitado a nuestra boda. 2026-11-08 - Santo Domingo, Ecuador">
+  <meta property="og:image" content="https://gloria-y-juan.vercel.app/assets/images/og-preview.jpg">
+  <meta property="og:url" content="https://gloria-y-juan.vercel.app/invitacion/maria-lopez.html">
+  <meta property="og:type" content="website">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Gloria & Juan te invitan, Maria Lopez">
+  <meta name="twitter:description" content="Estas invitado a nuestra boda. 2026-11-08 - Santo Domingo, Ecuador">
+  <meta name="twitter:image" content="https://gloria-y-juan.vercel.app/assets/images/og-preview.jpg">
+</head>
+<body>
+
+  <!-- 1. Hero -->
+  <section class="hero fade-in" id="hero">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <p class="hero-invite">Gloria &amp; Juan te invitan</p>
+      <h1 class="hero-name">Maria Lopez</h1>
+      <div class="hero-divider"></div>
+      <p class="hero-date">8 de Noviembre, 2026</p>
+    </div>
+  </section>
+
+  <!-- 2. Fecha + Countdown -->
+  <section class="section countdown-section fade-in" id="countdown">
+    <div class="container">
+      <p class="section-subtitle">Faltan</p>
+      <h2 class="section-title">8 de Noviembre, 2026</h2>
+      <div class="countdown">
+        <div class="countdown-item">
+          <span class="countdown-number" id="days">00</span>
+          <span class="countdown-label">días</span>
+        </div>
+        <div class="countdown-item">
+          <span class="countdown-number" id="hours">00</span>
+          <span class="countdown-label">horas</span>
+        </div>
+        <div class="countdown-item">
+          <span class="countdown-number" id="minutes">00</span>
+          <span class="countdown-label">minutos</span>
+        </div>
+        <div class="countdown-item">
+          <span class="countdown-number" id="seconds">00</span>
+          <span class="countdown-label">segundos</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. Mensaje de los Novios -->
+  <section class="section message-section fade-in" id="mensaje">
+    <div class="container">
+      <div class="divider-ornament">&#10045;</div>
+      <p class="message-text">Los novios le invitan a usted a compartir un momento especial en nuestras vidas.</p>
+      <div class="divider-ornament">&#10045;</div>
+    </div>
+  </section>
+
+  <!-- 4. Detalles del Evento -->
+  <section class="section details-section fade-in" id="detalles">
+    <div class="container">
+      <h2 class="section-title">Detalles del Evento</h2>
+
+      <div class="detail-card">
+        <h3 class="detail-heading">Ceremonia</h3>
+        <p class="detail-place">Iglesia de Santo Domingo</p>
+        <a href="https://maps.google.com/?q=Santo+Domingo+Ecuador" target="_blank" rel="noopener" class="detail-maps">Ver en Google Maps</a>
+      </div>
+
+      <div class="detail-divider"></div>
+
+      <div class="detail-card">
+        <h3 class="detail-heading">Recepción</h3>
+        <p class="detail-place">Salon de Eventos</p>
+        <a href="https://maps.google.com/?q=Santo+Domingo+Ecuador" target="_blank" rel="noopener" class="detail-maps">Ver en Google Maps</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Vestimenta -->
+  <section class="section dress-section fade-in" id="vestimenta">
+    <div class="container">
+      <h2 class="section-title">Código de Vestimenta</h2>
+      <p class="dress-code">Formal / Elegante</p>
+    </div>
+  </section>
+
+  <!-- 6. Calendario -->
+  <section class="section calendar-section fade-in" id="calendario">
+    <div class="container">
+      <h2 class="section-title">Agrega a tu Calendario</h2>
+      <div class="calendar-buttons">
+        <a href="#" class="btn btn-primary" id="btn-google-calendar" target="_blank" rel="noopener">Google Calendar</a>
+        <button class="btn btn-outline" id="btn-ics-download" type="button">Descargar .ics</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. RSVP -->
+  <section class="section rsvp-section fade-in" id="rsvp">
+    <div class="container">
+      <h2 class="section-title">Confirma tu Asistencia</h2>
+      <form id="rsvp-form" class="rsvp-form">
+        <div class="form-group">
+          <label for="rsvp-nombre">Nombre</label>
+          <input type="text" id="rsvp-nombre" name="nombre" value="Maria Lopez" readonly>
+        </div>
+        <div class="form-group">
+          <label for="rsvp-cupos">¿Cuántos asistirán?</label>
+          <select id="rsvp-cupos" name="cupos">
+            <option value="1">1 cupo</option>
+
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="rsvp-mensaje">Mensaje (opcional)</label>
+          <textarea id="rsvp-mensaje" name="mensaje" rows="3" placeholder="Déjanos un mensaje..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary btn-submit">Confirmar Asistencia</button>
+      </form>
+      <div id="rsvp-success" class="rsvp-message rsvp-success" style="display: none;">
+        ¡Gracias por confirmar! Tu respuesta ha sido registrada.
+      </div>
+      <div id="rsvp-error" class="rsvp-message rsvp-error" style="display: none;">
+        Hubo un error al enviar tu respuesta. Por favor, intenta de nuevo.
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. Cierre -->
+  <section class="section closing-section fade-in" id="cierre">
+    <div class="container">
+      <p class="closing-thanks">Gracias, Maria Lopez</p>
+      <div class="monogram">G<span class="monogram-ampersand">&amp;</span>J</div>
+      <p class="closing-date">08 · 11 · 2026</p>
+    </div>
+  </section>
+
+  <!-- Script: expose globals + load main.js -->
+  <script>
+    var INVITADO = {
+      nombre: "Maria Lopez",
+      cupos: 1,
+      slug: "maria-lopez"
+    };
+    var EVENTO_FECHA = "2026-11-08";
+  </script>
+  <script src="../src/main.js"></script>
+</body>
+</html>
