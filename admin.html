@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel de Control - Boda Gloria & Juan</title>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
   <style>
     :root {
       --bg: #FAFAF8;
@@ -123,17 +123,6 @@
     .toast-success { background: var(--olive); }
     .toast-error { background: var(--danger); }
 
-    /* Generate section */
-    .generate-section {
-      margin-top: 24px; padding: 24px; background: var(--white); border: 1px solid var(--border);
-      border-radius: 4px; text-align: center;
-    }
-    .generate-section h3 {
-      font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 400; margin-bottom: 8px;
-    }
-    .generate-section p { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 16px; }
-    .generate-progress { margin-top: 12px; font-size: 0.8rem; color: var(--text-secondary); }
-
     @media (max-width: 600px) {
       #dashboard { padding: 16px; }
       .tabs { gap: 0; }
@@ -173,9 +162,6 @@
           <button class="btn btn-secondary" onclick="saveAllInvitados()" id="btn-save">Guardar Cambios</button>
           <button class="btn btn-secondary" onclick="loadInvitados()">Recargar</button>
         </div>
-        <div class="toolbar-right">
-          <button class="btn btn-primary" onclick="generateInvitations()" id="btn-generate">Generar Invitaciones</button>
-        </div>
       </div>
 
       <div class="table-wrapper" id="invitados-table-wrapper">
@@ -194,13 +180,6 @@
             <tr><td colspan="6" class="empty-msg"><p>Cargando invitados...</p></td></tr>
           </tbody>
         </table>
-      </div>
-
-      <div class="generate-section" id="generate-section" style="display:none;">
-        <h3>Invitaciones Generadas</h3>
-        <p>Se crearon <span id="gen-count">0</span> archivos HTML listos para descargar.</p>
-        <button class="btn btn-primary" onclick="downloadZip()" id="btn-download">Descargar .zip</button>
-        <p class="generate-progress" id="gen-progress"></p>
       </div>
     </div>
 
@@ -254,7 +233,6 @@
 
     var allInvitados = [];
     var allRespuestas = [];
-    var generatedZip = null;
 
     // ==========================================
     // LOGIN
@@ -336,6 +314,7 @@
           + '<option value="false"' + (inv.activo === "false" ? ' selected' : '') + '>No</option>'
           + '</select></td>'
           + '<td><div class="actions-cell">'
+          + '<button class="btn btn-sm btn-primary" onclick="copyLink(this)" title="Copiar link de invitacion">link</button>'
           + '<button class="btn btn-sm btn-secondary" onclick="autoSlug(this)" title="Generar slug">slug</button>'
           + '<button class="btn btn-sm btn-danger" onclick="removeRow(this)" title="Eliminar">x</button>'
           + '</div></td>'
@@ -363,6 +342,16 @@
       var nombre = tr.querySelector("input[data-field='nombre']").value;
       var slug = toSlug(nombre);
       tr.querySelector("input[data-field='slug']").value = slug;
+    }
+
+    function copyLink(btn) {
+      var tr = btn.closest("tr");
+      var slug = tr.querySelector("input[data-field='slug']").value;
+      if (!slug) { showToast("Primero genera o escribe un slug", "error"); return; }
+      var url = "https://invitaciones-de-boda-personalizada.vercel.app/invitacion/" + slug + ".html";
+      navigator.clipboard.writeText(url).then(function() {
+        showToast("Link copiado: " + slug + ".html", "success");
+      });
     }
 
     function toSlug(text) {
@@ -417,7 +406,7 @@
           body: JSON.stringify({ action: "saveInvitados", invitados: valid })
         });
         allInvitados = valid.map(function(v, i) { v._row = i + 2; return v; });
-        showToast("Invitados guardados (" + valid.length + ")", "success");
+        showToast("Guardado. Las invitaciones se actualizan automaticamente en ~2 min.", "success");
       } catch (err) {
         showToast("Error al guardar", "error");
       }
@@ -427,89 +416,8 @@
     }
 
     // ==========================================
-    // GENERAR INVITACIONES (Client-side)
-    // ==========================================
-    function generateInvitations() {
-      var invitados = gatherInvitadosFromTable();
-      var activos = invitados.filter(function(i) { return i.nombre && i.slug && i.activo !== "false"; });
-
-      if (!activos.length) {
-        showToast("No hay invitados activos para generar.", "error");
-        return;
-      }
-
-      var zip = new JSZip();
-      var folder = zip.folder("invitacion");
-
-      var template = getTemplateHTML();
-
-      for (var i = 0; i < activos.length; i++) {
-        var inv = activos[i];
-        var html = fillTemplate(template, inv);
-        folder.file(inv.slug + ".html", html);
-      }
-
-      generatedZip = zip;
-
-      document.getElementById("gen-count").textContent = activos.length;
-      document.getElementById("generate-section").style.display = "block";
-      showToast(activos.length + " invitaciones generadas", "success");
-    }
-
-    function downloadZip() {
-      if (!generatedZip) return;
-      generatedZip.generateAsync({ type: "blob" }).then(function(content) {
-        var a = document.createElement("a");
-        a.href = URL.createObjectURL(content);
-        a.download = "invitaciones-boda.zip";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(a.href);
-      });
-    }
-
-    function fillTemplate(template, inv) {
-      var fechaParts = "2026-11-08".split("-");
-      var horaParts = "16:00".split(":");
-      var horaNum = parseInt(horaParts[0]);
-      var horaDisplay = (horaNum > 12 ? horaNum - 12 : horaNum) + ":" + horaParts[1] + " pm";
-      var horaRecep = String(horaNum + 1).padStart(2, "0") + ":" + horaParts[1];
-
-      var cuposOpts = "";
-      for (var c = 1; c <= inv.cupos; c++) {
-        cuposOpts += '<option value="' + c + '">' + c + " " + (c === 1 ? "cupo" : "cupos") + "</option>\n";
-      }
-
-      var BASE = "https://gloria-y-juan.vercel.app";
-
-      return template
-        .replace(/\{\{NOMBRE\}\}/g, inv.nombre)
-        .replace(/\{\{CUPOS\}\}/g, inv.cupos)
-        .replace(/\{\{SLUG\}\}/g, inv.slug)
-        .replace(/\{\{CUPOS_OPTIONS\}\}/g, cuposOpts)
-        .replace(/\{\{FECHA_ISO\}\}/g, "2026-11-08")
-        .replace(/\{\{HORA_DISPLAY\}\}/g, horaDisplay)
-        .replace(/\{\{HORA\}\}/g, "16:00")
-        .replace(/\{\{HORA_RECEPCION\}\}/g, horaRecep)
-        .replace(/\{\{CEREMONIA_LUGAR\}\}/g, "Iglesia de Santo Domingo")
-        .replace(/\{\{CEREMONIA_MAPS\}\}/g, "https://maps.google.com/?q=Santo+Domingo+Ecuador")
-        .replace(/\{\{RECEPCION_LUGAR\}\}/g, "Salon de Eventos")
-        .replace(/\{\{RECEPCION_MAPS\}\}/g, "https://maps.google.com/?q=Santo+Domingo+Ecuador")
-        .replace(/\{\{DRESS_CODE\}\}/g, "Formal / Elegante")
-        .replace(/\{\{MENSAJE_NOVIOS\}\}/g, "Los novios le invitan a usted a compartir un momento especial en nuestras vidas.")
-        .replace(/\{\{OG_TITLE\}\}/g, "Gloria & Juan te invitan, " + inv.nombre)
-        .replace(/\{\{OG_DESC\}\}/g, "Estas invitado a nuestra boda. 2026-11-08 - Santo Domingo, Ecuador")
-        .replace(/\{\{OG_IMAGE\}\}/g, BASE + "/assets/images/og-preview.jpg")
-        .replace(/\{\{OG_URL\}\}/g, BASE + "/invitacion/" + inv.slug + ".html")
-        .replace(/href="styles\.css"/g, 'href="../src/styles.css"')
-        .replace(/src="main\.js"/g, 'src="../src/main.js"')
-        .replace(/url\('https:\/\/gloria-y-juan\.vercel\.app\/assets\/images\/hero\.jpg'\)/g, "url('../src/assets/images/hero.jpg')")
-        .replace(/src="https:\/\/gloria-y-juan\.vercel\.app\/assets\/images\/detail\.jpg"/g, 'src="../src/assets/images/detail.jpg"');
-    }
-
-    function getTemplateHTML() {
-      return '<!DOCTYPE html>\n<html lang="es">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>{{OG_TITLE}}</title>\n  <link rel="preconnect" href="https://fonts.googleapis.com">\n  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Great+Vibes&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">\n  <link rel="stylesheet" href="style.css">\n  <meta property="og:title" content="{{OG_TITLE}}">\n  <meta property="og:description" content="{{OG_DESC}}">\n  <meta property="og:image" content="{{OG_IMAGE}}">\n  <meta property="og:url" content="{{OG_URL}}">\n  <meta property="og:type" content="website">\n</head>\n<body>\n  <section class="hero fade-in" id="hero" style="background-image: url(\'https://gloria-y-juan.vercel.app/assets/images/hero.jpg\');">\n    <div class="hero-overlay"></div>\n    <div class="hero-content">\n      <p class="hero-invite">Gloria &amp; Juan te invitan</p>\n      <h1 class="hero-name">{{NOMBRE}}</h1>\n      <div class="hero-divider"></div>\n      <p class="hero-date">8 de Noviembre, 2026</p>\n    </div>\n  </section>\n  <section class="section countdown-section fade-in" id="countdown">\n    <div class="container">\n      <p class="section-subtitle">Faltan</p>\n      <h2 class="section-title">8 de Noviembre, 2026</h2>\n      <div class="countdown">\n        <div class="countdown-item"><span class="countdown-number" id="days">00</span><span class="countdown-label">dias</span></div>\n        <div class="countdown-item"><span class="countdown-number" id="hours">00</span><span class="countdown-label">horas</span></div>\n        <div class="countdown-item"><span class="countdown-number" id="minutes">00</span><span class="countdown-label">minutos</span></div>\n        <div class="countdown-item"><span class="countdown-number" id="seconds">00</span><span class="countdown-label">segundos</span></div>\n      </div>\n    </div>\n  </section>\n  <section class="section message-section fade-in" id="mensaje">\n    <div class="container">\n      <div class="divider-ornament">&#10045;</div>\n      <p class="message-text">{{MENSAJE_NOVIOS}}</p>\n      <div class="divider-ornament">&#10045;</div>\n    </div>\n  </section>\n  <section class="section details-section fade-in" id="detalles">\n    <div class="container">\n      <h2 class="section-title">Detalles del Evento</h2>\n      <div class="detail-image-wrapper"><img src="https://gloria-y-juan.vercel.app/assets/images/detail.jpg" alt="Boda" class="detail-image" loading="lazy"></div>\n      <div class="detail-card"><h3 class="detail-heading">Ceremonia</h3><p class="detail-place">{{CEREMONIA_LUGAR}}</p><a href="{{CEREMONIA_MAPS}}" target="_blank" rel="noopener" class="detail-maps">Ver en Google Maps</a></div>\n      <div class="detail-divider"></div>\n      <div class="detail-card"><h3 class="detail-heading">Recepcion</h3><p class="detail-place">{{RECEPCION_LUGAR}}</p><a href="{{RECEPCION_MAPS}}" target="_blank" rel="noopener" class="detail-maps">Ver en Google Maps</a></div>\n    </div>\n  </section>\n  <section class="section dress-section fade-in" id="vestimenta">\n    <div class="container"><h2 class="section-title">Codigo de Vestimenta</h2><p class="dress-code">{{DRESS_CODE}}</p></div>\n  </section>\n  <section class="section calendar-section fade-in" id="calendario">\n    <div class="container"><h2 class="section-title">Agrega a tu Calendario</h2><div class="calendar-buttons"><a href="#" class="btn btn-primary" id="btn-google-calendar" target="_blank" rel="noopener">Google Calendar</a><button class="btn btn-outline" id="btn-ics-download" type="button">Descargar .ics</button></div></div>\n  </section>\n  <section class="section rsvp-section fade-in" id="rsvp">\n    <div class="container">\n      <h2 class="section-title">Confirma tu Asistencia</h2>\n      <form id="rsvp-form" class="rsvp-form">\n        <div class="form-group"><label for="rsvp-nombre">Nombre</label><input type="text" id="rsvp-nombre" name="nombre" value="{{NOMBRE}}"></div>\n        <div class="form-group"><label for="rsvp-cupos">Cuantos asistiran?</label><select id="rsvp-cupos" name="cupos">{{CUPOS_OPTIONS}}</select></div>\n        <div class="form-group"><label for="rsvp-mensaje">Mensaje (opcional)</label><textarea id="rsvp-mensaje" name="mensaje" rows="3" placeholder="Dejanos un mensaje..."></textarea></div>\n        <button type="submit" class="btn btn-primary btn-submit">Confirmar Asistencia</button>\n      </form>\n      <div id="rsvp-success" class="rsvp-message rsvp-success" style="display:none;">Gracias por confirmar! Tu respuesta ha sido registrada.</div>\n      <div id="rsvp-error" class="rsvp-message rsvp-error" style="display:none;">Hubo un error. Por favor, intenta de nuevo.</div>\n    </div>\n  </section>\n  <section class="section closing-section fade-in" id="cierre">\n    <div class="container">\n      <p class="closing-thanks">Gracias, {{NOMBRE}}</p>\n      <div class="monogram">G<span class="monogram-ampersand">&amp;</span>J</div>\n      <p class="closing-date">08 &middot; 11 &middot; 2026</p>\n    </div>\n  </section>\n  <script>\n    var INVITADO = { nombre: "{{NOMBRE}}", cupos: {{CUPOS}}, slug: "{{SLUG}}" };\n    var EVENTO_FECHA = "2026-11-08";\n  <\/script>\n  <script src="https://gloria-y-juan.vercel.app/src/main.js"><\/script>\n</body>\n</html>';
+    // CONFIRMACIONES (RSVP)
+    // ==========================================title">Confirma tu Asistencia</h2>\n      <form id="rsvp-form" class="rsvp-form">\n        <div class="form-group"><label for="rsvp-nombre">Nombre</label><input type="text" id="rsvp-nombre" name="nombre" value="{{NOMBRE}}"></div>\n        <div class="form-group"><label for="rsvp-cupos">Cuantos asistiran?</label><select id="rsvp-cupos" name="cupos">{{CUPOS_OPTIONS}}</select></div>\n        <div class="form-group"><label for="rsvp-mensaje">Mensaje (opcional)</label><textarea id="rsvp-mensaje" name="mensaje" rows="3" placeholder="Dejanos un mensaje..."></textarea></div>\n        <button type="submit" class="btn btn-primary btn-submit">Confirmar Asistencia</button>\n      </form>\n      <div id="rsvp-success" class="rsvp-message rsvp-success" style="display:none;">Gracias por confirmar! Tu respuesta ha sido registrada.</div>\n      <div id="rsvp-error" class="rsvp-message rsvp-error" style="display:none;">Hubo un error. Por favor, intenta de nuevo.</div>\n    </div>\n  </section>\n  <section class="section closing-section fade-in" id="cierre">\n    <div class="container">\n      <p class="closing-thanks">Gracias, {{NOMBRE}}</p>\n      <div class="monogram">G<span class="monogram-ampersand">&amp;</span>J</div>\n      <p class="closing-date">08 &middot; 11 &middot; 2026</p>\n    </div>\n  </section>\n  <script>\n    var INVITADO = { nombre: "{{NOMBRE}}", cupos: {{CUPOS}}, slug: "{{SLUG}}" };\n    var EVENTO_FECHA = "2026-11-08";\n  <\/script>\n  <script src="https://gloria-y-juan.vercel.app/src/main.js"><\/script>\n</body>\n</html>';
     }
 
     // ==========================================
