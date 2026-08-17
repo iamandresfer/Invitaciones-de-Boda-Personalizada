@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel de Control - Boda Gloria & Juan</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   <style>
     :root {
       --bg: #FAFAF8;
@@ -13,174 +14,132 @@
       --gold: #C9A96E;
       --olive: #3B4334;
       --white: #FFFFFF;
+      --danger: #c0392b;
+      --border: #e0e0e0;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Inter', -apple-system, sans-serif;
       background: var(--bg);
       color: var(--text);
-      padding: 40px 24px;
       min-height: 100vh;
     }
 
     /* Login */
     .login-overlay {
-      position: fixed;
-      inset: 0;
-      background: var(--bg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
+      position: fixed; inset: 0; background: var(--bg);
+      display: flex; align-items: center; justify-content: center; z-index: 100;
     }
-    .login-box {
-      text-align: center;
-      max-width: 320px;
-      width: 100%;
-      padding: 0 24px;
-    }
-    .login-box h2 {
-      font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: 1.5rem;
-      font-weight: 400;
-      margin-bottom: 8px;
-    }
-    .login-box p {
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-      margin-bottom: 24px;
-    }
+    .login-box { text-align: center; max-width: 320px; width: 100%; padding: 0 24px; }
+    .login-box h2 { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 400; margin-bottom: 8px; }
+    .login-box p { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 24px; }
     .login-box input {
-      width: 100%;
-      padding: 12px 16px;
-      border: 1px solid #e0e0e0;
-      font-size: 1rem;
-      font-family: inherit;
-      margin-bottom: 16px;
-      border-radius: 2px;
-      text-align: center;
+      width: 100%; padding: 12px 16px; border: 1px solid var(--border);
+      font-size: 1rem; font-family: inherit; margin-bottom: 16px; border-radius: 2px; text-align: center;
     }
-    .login-box input:focus {
-      outline: none;
-      border-color: var(--gold);
-    }
+    .login-box input:focus { outline: none; border-color: var(--gold); }
     .login-box button {
-      width: 100%;
-      padding: 12px;
-      background: var(--olive);
-      color: var(--white);
-      border: none;
-      font-family: inherit;
-      font-size: 0.85rem;
-      letter-spacing: 0.05em;
-      cursor: pointer;
-      border-radius: 2px;
-      transition: background 0.3s;
+      width: 100%; padding: 12px; background: var(--olive); color: var(--white);
+      border: none; font-family: inherit; font-size: 0.85rem; letter-spacing: 0.05em;
+      cursor: pointer; border-radius: 2px; transition: background 0.3s;
     }
     .login-box button:hover { background: #2a3028; }
-    .login-error {
-      color: #c0392b;
-      font-size: 0.8rem;
-      margin-top: 8px;
-      display: none;
-    }
+    .login-error { color: var(--danger); font-size: 0.8rem; margin-top: 8px; display: none; }
 
     /* Dashboard */
-    #dashboard { display: none; max-width: 900px; margin: 0 auto; }
-    h1 {
-      font-family: 'Cormorant Garamond', Georgia, serif;
-      font-weight: 400;
-      font-size: 1.5rem;
-      margin-bottom: 32px;
-      text-align: center;
-    }
+    #dashboard { display: none; max-width: 1000px; margin: 0 auto; padding: 32px 24px; }
+    h1 { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 1.5rem; margin-bottom: 24px; text-align: center; }
 
-    /* Stats */
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 16px;
-      margin-bottom: 32px;
+    /* Tabs */
+    .tabs { display: flex; gap: 0; margin-bottom: 32px; border-bottom: 2px solid var(--border); }
+    .tab {
+      padding: 12px 24px; font-size: 0.85rem; font-family: inherit; font-weight: 500;
+      background: none; border: none; cursor: pointer; color: var(--text-secondary);
+      border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s;
     }
-    .stat-card {
-      background: var(--white);
-      padding: 20px;
-      border-radius: 4px;
-      text-align: center;
-      border: 1px solid #eee;
-    }
-    .stat-number {
-      font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: 2rem;
-      color: var(--olive);
-      line-height: 1;
-    }
-    .stat-label {
-      font-size: 0.65rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text-secondary);
-      margin-top: 6px;
-    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--olive); border-bottom-color: var(--olive); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
 
-    /* Controls */
-    .controls {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
+    /* Toolbar */
+    .toolbar {
+      display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center;
     }
-    .controls input,
-    .controls select {
-      padding: 10px 14px;
-      border: 1px solid #e0e0e0;
-      font-size: 0.9rem;
-      font-family: inherit;
-      border-radius: 2px;
-      flex: 1;
-      min-width: 150px;
+    .toolbar-left { display: flex; gap: 8px; flex: 1; flex-wrap: wrap; }
+    .toolbar-right { display: flex; gap: 8px; }
+
+    /* Buttons */
+    .btn {
+      font-family: inherit; font-size: 0.8rem; padding: 10px 18px; border-radius: 2px;
+      cursor: pointer; transition: all 0.2s; border: 1px solid transparent; white-space: nowrap;
     }
-    .controls input:focus,
-    .controls select:focus {
-      outline: none;
-      border-color: var(--gold);
-    }
+    .btn-primary { background: var(--olive); color: var(--white); }
+    .btn-primary:hover { background: #2a3028; }
+    .btn-secondary { background: var(--white); color: var(--olive); border-color: var(--olive); }
+    .btn-secondary:hover { background: var(--olive); color: var(--white); }
+    .btn-danger { background: var(--danger); color: var(--white); border-color: var(--danger); }
+    .btn-danger:hover { background: #a93226; }
+    .btn-sm { padding: 6px 12px; font-size: 0.75rem; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
     /* Table */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: var(--white);
-      border-radius: 4px;
-      overflow: hidden;
-      border: 1px solid #eee;
+    .table-wrapper { overflow-x: auto; border: 1px solid var(--border); border-radius: 4px; background: var(--white); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #f0f0f0; font-size: 0.85rem; }
+    th { background: #f8f8f8; font-weight: 500; color: var(--text-secondary); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    tr:hover td { background: #fdfdfc; }
+    tr.editing td { background: #f5f8f5; }
+    td input, td select {
+      width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 2px;
+      font-family: inherit; font-size: 0.85rem; background: var(--white);
     }
-    th, td {
-      padding: 12px 16px;
-      text-align: left;
-      border-bottom: 1px solid #f0f0f0;
-      font-size: 0.85rem;
+    td input:focus, td select:focus { outline: none; border-color: var(--gold); }
+    .actions-cell { display: flex; gap: 4px; }
+    .empty-msg { text-align: center; padding: 48px 24px; color: var(--text-secondary); }
+    .empty-msg p { margin-bottom: 16px; }
+
+    /* Stats */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .stat-card { background: var(--white); padding: 16px; border-radius: 4px; text-align: center; border: 1px solid var(--border); }
+    .stat-number { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: var(--olive); line-height: 1; }
+    .stat-label { font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary); margin-top: 4px; }
+
+    /* Filter */
+    .filter-bar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .filter-bar input, .filter-bar select {
+      padding: 8px 12px; border: 1px solid var(--border); font-size: 0.85rem;
+      font-family: inherit; border-radius: 2px; flex: 1; min-width: 140px;
     }
-    th {
-      background: var(--olive);
-      color: var(--white);
-      font-weight: 500;
-      letter-spacing: 0.03em;
-      cursor: pointer;
-      user-select: none;
-      white-space: nowrap;
+    .filter-bar input:focus, .filter-bar select:focus { outline: none; border-color: var(--gold); }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; right: 24px; padding: 12px 20px; border-radius: 4px;
+      color: var(--white); font-size: 0.85rem; z-index: 200; opacity: 0;
+      transform: translateY(10px); transition: all 0.3s; pointer-events: none;
     }
-    th:hover { background: #2a3028; }
-    td:last-child { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .status-confirmado { color: var(--olive); font-weight: 500; }
-    .status-pendiente { color: var(--gold); font-weight: 500; }
-    .empty-msg { text-align: center; padding: 40px; color: var(--text-secondary); }
-    .error-msg { text-align: center; padding: 40px; color: #c0392b; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast-success { background: var(--olive); }
+    .toast-error { background: var(--danger); }
+
+    /* Generate section */
+    .generate-section {
+      margin-top: 24px; padding: 24px; background: var(--white); border: 1px solid var(--border);
+      border-radius: 4px; text-align: center;
+    }
+    .generate-section h3 {
+      font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-weight: 400; margin-bottom: 8px;
+    }
+    .generate-section p { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 16px; }
+    .generate-progress { margin-top: 12px; font-size: 0.8rem; color: var(--text-secondary); }
 
     @media (max-width: 600px) {
-      body { padding: 20px 16px; }
-      th, td { padding: 10px 12px; font-size: 0.8rem; }
-      .stats { grid-template-columns: repeat(2, 1fr); }
+      #dashboard { padding: 16px; }
+      .tabs { gap: 0; }
+      .tab { padding: 10px 14px; font-size: 0.8rem; }
+      th, td { padding: 8px 10px; font-size: 0.8rem; }
+      .toolbar { flex-direction: column; }
     }
   </style>
 </head>
@@ -201,95 +160,382 @@
   <div id="dashboard">
     <h1>Panel de Control - Gloria & Juan</h1>
 
-    <div class="stats">
-      <div class="stat-card">
-        <div class="stat-number" id="stat-total">-</div>
-        <div class="stat-label">Total Invitados</div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('invitados')">Invitados</button>
+      <button class="tab" onclick="switchTab('confirmaciones')">Confirmaciones</button>
+    </div>
+
+    <!-- TAB: INVITADOS -->
+    <div class="tab-panel active" id="panel-invitados">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <button class="btn btn-primary" onclick="addInvitado()">+ Agregar Invitado</button>
+          <button class="btn btn-secondary" onclick="saveAllInvitados()" id="btn-save">Guardar Cambios</button>
+          <button class="btn btn-secondary" onclick="loadInvitados()">Recargar</button>
+        </div>
+        <div class="toolbar-right">
+          <button class="btn btn-primary" onclick="generateInvitations()" id="btn-generate">Generar Invitaciones</button>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-number" id="stat-confirmados">-</div>
-        <div class="stat-label">Confirmados</div>
+
+      <div class="table-wrapper" id="invitados-table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:30px">#</th>
+              <th>Nombre</th>
+              <th style="width:100px">Cupos</th>
+              <th style="width:180px">Slug</th>
+              <th style="width:80px">Activo</th>
+              <th style="width:100px">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="invitados-body">
+            <tr><td colspan="6" class="empty-msg"><p>Cargando invitados...</p></td></tr>
+          </tbody>
+        </table>
       </div>
-      <div class="stat-card">
-        <div class="stat-number" id="stat-pendientes">-</div>
-        <div class="stat-label">Pendientes</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" id="stat-cupos">-</div>
-        <div class="stat-label">Cupos Confirmados</div>
+
+      <div class="generate-section" id="generate-section" style="display:none;">
+        <h3>Invitaciones Generadas</h3>
+        <p>Se crearon <span id="gen-count">0</span> archivos HTML listos para descargar.</p>
+        <button class="btn btn-primary" onclick="downloadZip()" id="btn-download">Descargar .zip</button>
+        <p class="generate-progress" id="gen-progress"></p>
       </div>
     </div>
 
-    <div class="controls">
-      <input type="text" id="search" placeholder="Buscar por nombre...">
-      <select id="filter-status">
-        <option value="all">Todos</option>
-        <option value="Confirmado">Confirmados</option>
-        <option value="Pendiente">Pendientes</option>
-      </select>
-    </div>
+    <!-- TAB: CONFIRMACIONES -->
+    <div class="tab-panel" id="panel-confirmaciones">
+      <div class="stats">
+        <div class="stat-card"><div class="stat-number" id="stat-total">-</div><div class="stat-label">Total Invitados</div></div>
+        <div class="stat-card"><div class="stat-number" id="stat-confirmados">-</div><div class="stat-label">Confirmados</div></div>
+        <div class="stat-card"><div class="stat-number" id="stat-pendientes">-</div><div class="stat-label">Pendientes</div></div>
+        <div class="stat-card"><div class="stat-number" id="stat-cupos">-</div><div class="stat-label">Cupos Confirmados</div></div>
+      </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th onclick="sortTable(0)">Nombre</th>
-          <th onclick="sortTable(1)">Cupos Asignados</th>
-          <th onclick="sortTable(2)">Cupos Confirmados</th>
-          <th onclick="sortTable(3)">Estado</th>
-          <th onclick="sortTable(4)">Mensaje</th>
-        </tr>
-      </thead>
-      <tbody id="table-body">
-        <tr><td colspan="5" class="empty-msg">Ingresa la contrasena para ver los datos</td></tr>
-      </tbody>
-    </table>
+      <div class="filter-bar">
+        <input type="text" id="search" placeholder="Buscar por nombre...">
+        <select id="filter-status">
+          <option value="all">Todos</option>
+          <option value="Confirmado">Confirmados</option>
+          <option value="Pendiente">Pendientes</option>
+        </select>
+      </div>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="sortTable(0)">Nombre</th>
+              <th onclick="sortTable(1)">Cupos Asignados</th>
+              <th onclick="sortTable(2)">Cupos Confirmados</th>
+              <th onclick="sortTable(3)">Estado</th>
+              <th onclick="sortTable(4)">Mensaje</th>
+            </tr>
+          </thead>
+          <tbody id="confirmaciones-body">
+            <tr><td colspan="5" class="empty-msg">Selecciona la pestana para ver datos</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
   <script>
-    // CAMBIAR ESTOS VALORES:
-    var DATA_URL = "TU_URL_DE_APPS_SCRIPT_WEB_APP_AQUI";  // URL del Apps Script Web App
-    var PASSWORD = "gloria2026";  // Contrasena para acceder
+    // ==========================================
+    // CONFIG
+    // ==========================================
+    var DATA_URL = "TU_URL_DE_APPS_SCRIPT_WEB_APP_AQUI";
+    var PASSWORD = "gloria2026";
+    var INVITADOS_SHEET = "Invitados";
 
-    var allData = [];
-    var sortDir = 1;
+    var allInvitados = [];
+    var allRespuestas = [];
+    var generatedZip = null;
 
+    // ==========================================
+    // LOGIN
+    // ==========================================
     function checkPassword() {
-      var input = document.getElementById("password-input").value;
-      if (input === PASSWORD) {
+      if (document.getElementById("password-input").value === PASSWORD) {
         document.getElementById("login-overlay").style.display = "none";
         document.getElementById("dashboard").style.display = "block";
-        loadData();
+        loadInvitados();
       } else {
-        document.getElementById("login-error").style.display = "block";
-        setTimeout(function() {
-          document.getElementById("login-error").style.display = "none";
-        }, 2000);
+        var err = document.getElementById("login-error");
+        err.style.display = "block";
+        setTimeout(function() { err.style.display = "none"; }, 2000);
       }
     }
-
     document.getElementById("password-input").addEventListener("keypress", function(e) {
       if (e.key === "Enter") checkPassword();
     });
 
-    async function loadData() {
-      document.getElementById("table-body").innerHTML = '<tr><td colspan="5" class="empty-msg">Cargando datos...</td></tr>';
+    // ==========================================
+    // TABS
+    // ==========================================
+    function switchTab(tab) {
+      document.querySelectorAll(".tab").forEach(function(t) { t.classList.remove("active"); });
+      document.querySelectorAll(".tab-panel").forEach(function(p) { p.classList.remove("active"); });
+
+      if (tab === "invitados") {
+        document.querySelectorAll(".tab")[0].classList.add("active");
+        document.getElementById("panel-invitados").classList.add("active");
+      } else {
+        document.querySelectorAll(".tab")[1].classList.add("active");
+        document.getElementById("panel-confirmaciones").classList.add("active");
+        loadRespuestas();
+      }
+    }
+
+    // ==========================================
+    // TOAST
+    // ==========================================
+    function showToast(msg, type) {
+      var toast = document.getElementById("toast");
+      toast.textContent = msg;
+      toast.className = "toast toast-" + type + " show";
+      setTimeout(function() { toast.className = "toast"; }, 3000);
+    }
+
+    // ==========================================
+    // INVITADOS CRUD
+    // ==========================================
+    async function loadInvitados() {
       try {
-        var response = await fetch(DATA_URL);
-        allData = await response.json();
-        updateStats();
-        renderTable(allData);
+        var resp = await fetch(DATA_URL + "?action=getInvitados");
+        allInvitados = await resp.json();
+        renderInvitadosTable();
       } catch (err) {
-        document.getElementById("table-body").innerHTML = '<tr><td colspan="5" class="error-msg">Error al cargar datos. Verifica la URL del endpoint en admin.html.</td></tr>';
+        document.getElementById("invitados-body").innerHTML =
+          '<tr><td colspan="6" class="empty-msg"><p>Error al cargar. Verifica la URL del endpoint.</p></td></tr>';
+      }
+    }
+
+    function renderInvitadosTable() {
+      var tbody = document.getElementById("invitados-body");
+      if (!allInvitados.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-msg"><p>No hay invitados. Haz clic en "+ Agregar Invitado" para comenzar.</p></td></tr>';
+        return;
+      }
+
+      var html = "";
+      for (var i = 0; i < allInvitados.length; i++) {
+        var inv = allInvitados[i];
+        var row = inv._row || (i + 2);
+        html += '<tr data-row="' + row + '">'
+          + '<td>' + (i + 1) + '</td>'
+          + '<td><input type="text" value="' + escHtml(inv.nombre || "") + '" data-field="nombre"></td>'
+          + '<td><input type="number" value="' + (inv.cupos || 1) + '" min="1" max="20" data-field="cupos"></td>'
+          + '<td><input type="text" value="' + escHtml(inv.slug || "") + '" data-field="slug" placeholder="auto"></td>'
+          + '<td><select data-field="activo">'
+          + '<option value="true"' + (inv.activo !== "false" ? ' selected' : '') + '>Si</option>'
+          + '<option value="false"' + (inv.activo === "false" ? ' selected' : '') + '>No</option>'
+          + '</select></td>'
+          + '<td><div class="actions-cell">'
+          + '<button class="btn btn-sm btn-secondary" onclick="autoSlug(this)" title="Generar slug">slug</button>'
+          + '<button class="btn btn-sm btn-danger" onclick="removeRow(this)" title="Eliminar">x</button>'
+          + '</div></td>'
+          + '</tr>';
+      }
+      tbody.innerHTML = html;
+    }
+
+    function addInvitado() {
+      allInvitados.push({ nombre: "", cupos: 1, slug: "", activo: "true", _row: null });
+      renderInvitadosTable();
+      var inputs = document.getElementById("invitados-body").querySelectorAll("input[data-field='nombre']");
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    }
+
+    function removeRow(btn) {
+      var tr = btn.closest("tr");
+      var idx = Array.from(tr.parentNode.children).indexOf(tr);
+      allInvitados.splice(idx, 1);
+      renderInvitadosTable();
+    }
+
+    function autoSlug(btn) {
+      var tr = btn.closest("tr");
+      var nombre = tr.querySelector("input[data-field='nombre']").value;
+      var slug = toSlug(nombre);
+      tr.querySelector("input[data-field='slug']").value = slug;
+    }
+
+    function toSlug(text) {
+      return text
+        .toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9\s-]/g, "")
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+    }
+
+    function escHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    function gatherInvitadosFromTable() {
+      var rows = document.getElementById("invitados-body").querySelectorAll("tr");
+      var result = [];
+      for (var i = 0; i < rows.length; i++) {
+        var tr = rows[i];
+        if (tr.querySelector(".empty-msg")) continue;
+        var nombre = tr.querySelector("input[data-field='nombre']").value.trim();
+        var cupos = parseInt(tr.querySelector("input[data-field='cupos']").value) || 1;
+        var slug = tr.querySelector("input[data-field='slug']").value.trim();
+        var activo = tr.querySelector("select[data-field='activo']").value;
+
+        if (!slug && nombre) slug = toSlug(nombre);
+
+        result.push({ nombre: nombre, cupos: cupos, slug: slug, activo: activo });
+      }
+      return result;
+    }
+
+    async function saveAllInvitados() {
+      var invitados = gatherInvitadosFromTable();
+      var valid = invitados.filter(function(i) { return i.nombre && i.slug; });
+      if (valid.length !== invitados.length) {
+        showToast("Hay invitados sin nombre o slug. Completa todos los campos.", "error");
+        return;
+      }
+
+      var btn = document.getElementById("btn-save");
+      btn.disabled = true;
+      btn.textContent = "Guardando...";
+
+      try {
+        await fetch(DATA_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "saveInvitados", invitados: valid })
+        });
+        allInvitados = valid.map(function(v, i) { v._row = i + 2; return v; });
+        showToast("Invitados guardados (" + valid.length + ")", "success");
+      } catch (err) {
+        showToast("Error al guardar", "error");
+      }
+
+      btn.disabled = false;
+      btn.textContent = "Guardar Cambios";
+    }
+
+    // ==========================================
+    // GENERAR INVITACIONES (Client-side)
+    // ==========================================
+    function generateInvitations() {
+      var invitados = gatherInvitadosFromTable();
+      var activos = invitados.filter(function(i) { return i.nombre && i.slug && i.activo !== "false"; });
+
+      if (!activos.length) {
+        showToast("No hay invitados activos para generar.", "error");
+        return;
+      }
+
+      var zip = new JSZip();
+      var folder = zip.folder("invitacion");
+
+      var template = getTemplateHTML();
+
+      for (var i = 0; i < activos.length; i++) {
+        var inv = activos[i];
+        var html = fillTemplate(template, inv);
+        folder.file(inv.slug + ".html", html);
+      }
+
+      folder.file("style.css", getStyleCSS());
+
+      var assets = zip.folder("assets");
+      assets.folder("images");
+
+      generatedZip = zip;
+
+      document.getElementById("gen-count").textContent = activos.length;
+      document.getElementById("generate-section").style.display = "block";
+      showToast(activos.length + " invitaciones generadas", "success");
+    }
+
+    function downloadZip() {
+      if (!generatedZip) return;
+      generatedZip.generateAsync({ type: "blob" }).then(function(content) {
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(content);
+        a.download = "invitaciones-boda.zip";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(a.href);
+      });
+    }
+
+    function fillTemplate(template, inv) {
+      var fechaParts = "2026-11-08".split("-");
+      var horaParts = "16:00".split(":");
+      var horaNum = parseInt(horaParts[0]);
+      var horaDisplay = (horaNum > 12 ? horaNum - 12 : horaNum) + ":" + horaParts[1] + " pm";
+      var horaRecep = String(horaNum + 1).padStart(2, "0") + ":" + horaParts[1];
+
+      var cuposOpts = "";
+      for (var c = 1; c <= inv.cupos; c++) {
+        cuposOpts += '<option value="' + c + '">' + c + " " + (c === 1 ? "cupo" : "cupos") + "</option>\n";
+      }
+
+      return template
+        .replace(/\{\{NOMBRE\}\}/g, inv.nombre)
+        .replace(/\{\{CUPOS\}\}/g, inv.cupos)
+        .replace(/\{\{SLUG\}\}/g, inv.slug)
+        .replace(/\{\{CUPOS_OPTIONS\}\}/g, cuposOpts)
+        .replace(/\{\{FECHA_ISO\}\}/g, "2026-11-08")
+        .replace(/\{\{HORA_DISPLAY\}\}/g, horaDisplay)
+        .replace(/\{\{HORA\}\}/g, "16:00")
+        .replace(/\{\{HORA_RECEPCION\}\}/g, horaRecep)
+        .replace(/\{\{CEREMONIA_LUGAR\}\}/g, "Iglesia de Santo Domingo")
+        .replace(/\{\{CEREMONIA_MAPS\}\}/g, "https://maps.google.com/?q=Santo+Domingo+Ecuador")
+        .replace(/\{\{RECEPCION_LUGAR\}\}/g, "Salon de Eventos")
+        .replace(/\{\{RECEPCION_MAPS\}\}/g, "https://maps.google.com/?q=Santo+Domingo+Ecuador")
+        .replace(/\{\{DRESS_CODE\}\}/g, "Formal / Elegante")
+        .replace(/\{\{MENSAJE_NOVIOS\}\}/g, "Los novios le invitan a usted a compartir un momento especial en nuestras vidas.")
+        .replace(/\{\{OG_TITLE\}\}/g, "Gloria & Juan te invitan, " + inv.nombre)
+        .replace(/\{\{OG_DESC\}\}/g, "Estas invitado a nuestra boda. 2026-11-08 - Santo Domingo, Ecuador")
+        .replace(/\{\{OG_IMAGE\}\}/g, "https://gloria-y-juan.vercel.app/assets/images/og-preview.jpg")
+        .replace(/\{\{OG_URL\}\}/g, "https://gloria-y-juan.vercel.app/invitacion/" + inv.slug + ".html");
+    }
+
+    function getTemplateHTML() {
+      return '<!DOCTYPE html>\n<html lang="es">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>{{OG_TITLE}}</title>\n  <link rel="preconnect" href="https://fonts.googleapis.com">\n  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Great+Vibes&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">\n  <link rel="stylesheet" href="style.css">\n  <meta property="og:title" content="{{OG_TITLE}}">\n  <meta property="og:description" content="{{OG_DESC}}">\n  <meta property="og:image" content="{{OG_IMAGE}}">\n  <meta property="og:url" content="{{OG_URL}}">\n  <meta property="og:type" content="website">\n</head>\n<body>\n  <section class="hero fade-in" id="hero" style="background-image: url(\'https://gloria-y-juan.vercel.app/assets/images/hero.jpg\');">\n    <div class="hero-overlay"></div>\n    <div class="hero-content">\n      <p class="hero-invite">Gloria &amp; Juan te invitan</p>\n      <h1 class="hero-name">{{NOMBRE}}</h1>\n      <div class="hero-divider"></div>\n      <p class="hero-date">8 de Noviembre, 2026</p>\n    </div>\n  </section>\n  <section class="section countdown-section fade-in" id="countdown">\n    <div class="container">\n      <p class="section-subtitle">Faltan</p>\n      <h2 class="section-title">8 de Noviembre, 2026</h2>\n      <div class="countdown">\n        <div class="countdown-item"><span class="countdown-number" id="days">00</span><span class="countdown-label">dias</span></div>\n        <div class="countdown-item"><span class="countdown-number" id="hours">00</span><span class="countdown-label">horas</span></div>\n        <div class="countdown-item"><span class="countdown-number" id="minutes">00</span><span class="countdown-label">minutos</span></div>\n        <div class="countdown-item"><span class="countdown-number" id="seconds">00</span><span class="countdown-label">segundos</span></div>\n      </div>\n    </div>\n  </section>\n  <section class="section message-section fade-in" id="mensaje">\n    <div class="container">\n      <div class="divider-ornament">&#10045;</div>\n      <p class="message-text">{{MENSAJE_NOVIOS}}</p>\n      <div class="divider-ornament">&#10045;</div>\n    </div>\n  </section>\n  <section class="section details-section fade-in" id="detalles">\n    <div class="container">\n      <h2 class="section-title">Detalles del Evento</h2>\n      <div class="detail-image-wrapper"><img src="https://gloria-y-juan.vercel.app/assets/images/detail.jpg" alt="Boda" class="detail-image" loading="lazy"></div>\n      <div class="detail-card"><h3 class="detail-heading">Ceremonia</h3><p class="detail-place">{{CEREMONIA_LUGAR}}</p><a href="{{CEREMONIA_MAPS}}" target="_blank" rel="noopener" class="detail-maps">Ver en Google Maps</a></div>\n      <div class="detail-divider"></div>\n      <div class="detail-card"><h3 class="detail-heading">Recepcion</h3><p class="detail-place">{{RECEPCION_LUGAR}}</p><a href="{{RECEPCION_MAPS}}" target="_blank" rel="noopener" class="detail-maps">Ver en Google Maps</a></div>\n    </div>\n  </section>\n  <section class="section dress-section fade-in" id="vestimenta">\n    <div class="container"><h2 class="section-title">Codigo de Vestimenta</h2><p class="dress-code">{{DRESS_CODE}}</p></div>\n  </section>\n  <section class="section calendar-section fade-in" id="calendario">\n    <div class="container"><h2 class="section-title">Agrega a tu Calendario</h2><div class="calendar-buttons"><a href="#" class="btn btn-primary" id="btn-google-calendar" target="_blank" rel="noopener">Google Calendar</a><button class="btn btn-outline" id="btn-ics-download" type="button">Descargar .ics</button></div></div>\n  </section>\n  <section class="section rsvp-section fade-in" id="rsvp">\n    <div class="container">\n      <h2 class="section-title">Confirma tu Asistencia</h2>\n      <form id="rsvp-form" class="rsvp-form">\n        <div class="form-group"><label for="rsvp-nombre">Nombre</label><input type="text" id="rsvp-nombre" name="nombre" value="{{NOMBRE}}"></div>\n        <div class="form-group"><label for="rsvp-cupos">Cuantos asistiran?</label><select id="rsvp-cupos" name="cupos">{{CUPOS_OPTIONS}}</select></div>\n        <div class="form-group"><label for="rsvp-mensaje">Mensaje (opcional)</label><textarea id="rsvp-mensaje" name="mensaje" rows="3" placeholder="Dejanos un mensaje..."></textarea></div>\n        <button type="submit" class="btn btn-primary btn-submit">Confirmar Asistencia</button>\n      </form>\n      <div id="rsvp-success" class="rsvp-message rsvp-success" style="display:none;">Gracias por confirmar! Tu respuesta ha sido registrada.</div>\n      <div id="rsvp-error" class="rsvp-message rsvp-error" style="display:none;">Hubo un error. Por favor, intenta de nuevo.</div>\n    </div>\n  </section>\n  <section class="section closing-section fade-in" id="cierre">\n    <div class="container">\n      <p class="closing-thanks">Gracias, {{NOMBRE}}</p>\n      <div class="monogram">G<span class="monogram-ampersand">&amp;</span>J</div>\n      <p class="closing-date">08 &middot; 11 &middot; 2026</p>\n    </div>\n  </section>\n  <script>\n    var INVITADO = { nombre: "{{NOMBRE}}", cupos: {{CUPOS}}, slug: "{{SLUG}}" };\n    var EVENTO_FECHA = "2026-11-08";\n  <\/script>\n  <script src="https://gloria-y-juan.vercel.app/src/main.js"><\/script>\n</body>\n</html>';
+    }
+
+    function getStyleCSS() {
+      return ':root{--bg:#FAFAF8;--text:#2C2C2C;--text-secondary:#6B6B6B;--gold:#C9A96E;--olive:#3B4334;--white:#FFF;--font-heading:"Cormorant Garamond",Georgia,serif;--font-body:"Inter",-apple-system,sans-serif;--font-accent:"Great Vibes",cursive}*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}body{background-color:var(--bg);font-family:var(--font-body);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}.container{max-width:600px;margin:0 auto;padding:0 24px}.hero{min-height:100vh;min-height:600px;display:flex;align-items:center;justify-content:center;position:relative;background:linear-gradient(160deg,#e8e0d4,#d4c8b8);background-size:cover;background-position:center;overflow:hidden}.hero-overlay{position:absolute;inset:0;background:rgba(0,0,0,.35)}.hero-content{position:relative;z-index:1;color:var(--white);text-align:center}.hero-invite{font-family:var(--font-heading);font-size:1.5rem;letter-spacing:.15em;text-transform:uppercase;margin-bottom:16px}.hero-name{font-family:var(--font-heading);font-size:2.5rem;font-weight:300;font-style:italic;margin-bottom:24px}.hero-divider{width:60px;height:1px;background-color:var(--gold);margin:0 auto 24px}.hero-date{font-family:var(--font-body);font-size:1rem;color:var(--text-secondary)}.section{padding:80px 0;text-align:center}.section-subtitle{font-size:.75rem;text-transform:uppercase;letter-spacing:.15em;color:var(--text-secondary);margin-bottom:8px}.section-title{font-family:var(--font-heading);font-size:2rem;font-weight:300;margin-bottom:32px}.countdown{display:flex;justify-content:center;gap:32px}.countdown-item{display:flex;flex-direction:column;align-items:center}.countdown-number{font-family:var(--font-heading);font-size:2.5rem;font-weight:300;color:var(--olive);line-height:1}.countdown-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-secondary);margin-top:4px}.message-text{font-family:var(--font-heading);font-size:1.25rem;font-style:italic;font-weight:300;max-width:480px;margin:24px auto;line-height:1.8}.divider-ornament{color:var(--gold);font-size:1.5rem;line-height:1}.detail-image-wrapper{margin-bottom:40px;border-radius:4px;overflow:hidden;max-width:400px;margin-left:auto;margin-right:auto}.detail-image{width:100%;height:auto;display:block;filter:saturate(.85)}.detail-card{margin-bottom:32px}.detail-heading{font-size:.7rem;text-transform:uppercase;letter-spacing:.15em;color:var(--text-secondary);margin-bottom:8px;font-weight:400}.detail-place{font-family:var(--font-heading);font-size:1.5rem;margin-bottom:8px}.detail-maps{color:var(--gold);text-decoration:underline;font-size:.85rem;transition:color .2s}.detail-maps:hover{color:var(--olive)}.detail-divider{width:40px;height:1px;background-color:var(--gold);margin:0 auto 32px}.dress-code{font-family:var(--font-heading);font-size:1.25rem}.calendar-buttons{display:flex;flex-direction:column;align-items:center;gap:12px}.btn{font-family:var(--font-body);font-size:.85rem;padding:14px 32px;min-width:240px;border-radius:2px;border:1px solid transparent;cursor:pointer;text-align:center;transition:background-color .2s,color .2s}.btn-primary{background-color:var(--olive);color:var(--white)}.btn-primary:hover{background-color:#2e3629}.btn-outline{background-color:transparent;border-color:var(--olive);color:var(--olive)}.btn-outline:hover{background-color:var(--olive);color:var(--white)}.rsvp-form{text-align:left}.form-group{margin-bottom:24px}.form-group label{display:block;font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text-secondary);margin-bottom:6px}.form-group input,.form-group select,.form-group textarea{width:100%;padding:12px 16px;border:1px solid #e0e0e0;border-radius:2px;font-family:var(--font-body);font-size:.95rem;color:var(--text);background-color:var(--white);transition:border-color .2s;outline:none}.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--gold)}.btn-submit{width:100%;background-color:var(--olive);color:var(--white);border:none;padding:14px 32px;font-size:.85rem;border-radius:2px;cursor:pointer;transition:background-color .2s}.btn-submit:hover{background-color:#2e3629}.rsvp-success{color:var(--olive);text-align:center;margin-top:24px}.rsvp-error{color:#c0392b;text-align:center;margin-top:24px}.closing-thanks{font-family:var(--font-heading);font-size:1.75rem;margin-bottom:16px}.monogram{font-family:var(--font-heading);font-size:2.5rem;font-weight:300;margin-bottom:12px}.monogram-ampersand{font-family:var(--font-accent);color:var(--gold);font-size:3rem}.closing-date{font-size:.85rem;color:var(--text-secondary);letter-spacing:.15em}.fade-in{opacity:0;transform:translateY(20px);transition:opacity .8s ease,transform .8s ease}.fade-in.visible{opacity:1;transform:translateY(0)}@media(max-width:480px){.hero-invite{font-size:1.15rem}.hero-name{font-size:1.85rem}.hero-date{font-size:.9rem}.section{padding:56px 0}.section-title{font-size:1.65rem}.countdown-number{font-size:2rem}.countdown{gap:20px}.message-text{font-size:1.1rem}.detail-place{font-size:1.3rem}.btn{min-width:200px}.closing-thanks{font-size:1.5rem}.monogram{font-size:2rem}.monogram-ampersand{font-size:2.5rem}}';
+    }
+
+    // ==========================================
+    // CONFIRMACIONES (RSVP)
+    // ==========================================
+    async function loadRespuestas() {
+      try {
+        var resp = await fetch(DATA_URL + "?action=getRespuestas");
+        allRespuestas = await resp.json();
+        updateStats();
+        renderConfirmacionesTable(allRespuestas);
+      } catch (err) {
+        document.getElementById("confirmaciones-body").innerHTML =
+          '<tr><td colspan="5" class="empty-msg">Error al cargar datos.</td></tr>';
       }
     }
 
     function updateStats() {
-      var total = allData.length;
-      var confirmados = 0;
-      var cupos = 0;
-      for (var i = 0; i < allData.length; i++) {
-        if (allData[i]["Estado"] === "Confirmado") confirmados++;
-        cupos += parseInt(allData[i]["Cupos Confirmados"]) || 0;
+      var total = allRespuestas.length;
+      var confirmados = 0, cupos = 0;
+      for (var i = 0; i < allRespuestas.length; i++) {
+        if (allRespuestas[i]["Estado"] === "Confirmado") confirmados++;
+        cupos += parseInt(allRespuestas[i]["Cupos Confirmados"]) || 0;
       }
       document.getElementById("stat-total").textContent = total;
       document.getElementById("stat-confirmados").textContent = confirmados;
@@ -297,23 +543,14 @@
       document.getElementById("stat-cupos").textContent = cupos;
     }
 
-    function renderTable(data) {
-      var tbody = document.getElementById("table-body");
-      if (!data.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Sin respuestas aun</td></tr>';
-        return;
-      }
+    function renderConfirmacionesTable(data) {
+      var tbody = document.getElementById("confirmaciones-body");
+      if (!data.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Sin respuestas aun</td></tr>'; return; }
       var html = "";
       for (var i = 0; i < data.length; i++) {
         var r = data[i];
         var estado = (r["Estado"] || "").toLowerCase();
-        html += "<tr>"
-          + "<td>" + (r["Nombre"] || "-") + "</td>"
-          + "<td>" + (r["Cupos Asignados"] || "-") + "</td>"
-          + "<td>" + (r["Cupos Confirmados"] || "-") + "</td>"
-          + '<td class="status-' + estado + '">' + (r["Estado"] || "-") + "</td>"
-          + "<td>" + (r["Mensaje"] || "-") + "</td>"
-          + "</tr>";
+        html += "<tr><td>" + escHtml(r["Nombre"] || "-") + "</td><td>" + (r["Cupos Asignados"] || "-") + "</td><td>" + (r["Cupos Confirmados"] || "-") + "</td><td class='status-" + estado + "'>" + (r["Estado"] || "-") + "</td><td>" + escHtml(r["Mensaje"] || "-") + "</td></tr>";
       }
       tbody.innerHTML = html;
     }
@@ -324,25 +561,18 @@
     function applyFilters() {
       var search = document.getElementById("search").value.toLowerCase();
       var status = document.getElementById("filter-status").value;
-      var filtered = allData;
-      if (search) {
-        filtered = filtered.filter(function(d) {
-          return (d["Nombre"] || "").toLowerCase().indexOf(search) !== -1;
-        });
-      }
-      if (status !== "all") {
-        filtered = filtered.filter(function(d) { return d["Estado"] === status; });
-      }
-      renderTable(filtered);
+      var filtered = allRespuestas;
+      if (search) filtered = filtered.filter(function(d) { return (d["Nombre"] || "").toLowerCase().indexOf(search) !== -1; });
+      if (status !== "all") filtered = filtered.filter(function(d) { return d["Estado"] === status; });
+      renderConfirmacionesTable(filtered);
     }
 
+    var sortDir = 1;
     function sortTable(col) {
       var keys = ["Nombre", "Cupos Asignados", "Cupos Confirmados", "Estado", "Mensaje"];
-      var key = keys[col];
-      sortDir *= -1;
-      allData.sort(function(a, b) {
-        var va = a[key] || "";
-        var vb = b[key] || "";
+      var key = keys[col]; sortDir *= -1;
+      allRespuestas.sort(function(a, b) {
+        var va = a[key] || "", vb = b[key] || "";
         if (typeof va === "number") return (va - vb) * sortDir;
         return String(va).localeCompare(String(vb)) * sortDir;
       });
