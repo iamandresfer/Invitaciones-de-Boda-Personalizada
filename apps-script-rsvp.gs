@@ -1,41 +1,48 @@
 /**
  * Google Apps Script para Boda Gloria & Juan
- * Maneja: RSVP (Respuestas) + Gestión de Invitados
+ * Maneja: RSVP + Invitados + Auto-commit a GitHub
  *
  * INSTRUCCIONES:
- * 1. Crear un Google Sheet nuevo
- * 2. Crear DOS hojas:
- *    - "Respuestas" columnas A-F: Fecha | Nombre | Cupos Asignados | Cupos Confirmados | Mensaje | Estado
- *    - "Invitados" columnas A-D: nombre | cupos | slug | activo
- * 3. Ir a Extensiones > Apps Script
- * 4. Pegar este codigo
- * 5. Guardar (Ctrl+S)
- * 6. Desplegar > Nuevo despliegue
- *    - Tipo: Aplicacion web
- *    - Ejecutar como: Yo (tu cuenta)
- *    - Quien tiene acceso: Cualquier persona
- * 7. Copiar la URL del despliegue y pegarla en:
- *    - config.js > rsvpEndpoint
- *    - admin.html > DATA_URL
- * 8. En el Google Sheet, Compartir > "Cualquier persona con el enlace puede ver"
+ * 1. Crear Google Sheet con hojas "Respuestas" e "Invitados"
+ * 2. Extensiones > Apps Script > Pegar este codigo
+ * 3. Guardar (Ctrl+S)
+ * 4. Ejecutar setupGithub() una vez para configurar el token de GitHub
+ * 5. Desplegar > Nuevo despliegue > Aplicacion web > Cualquier persona
+ * 6. Pegar URL del despliegue en admin.html > DATA_URL
  */
+
+// ==========================================
+// SETUP (ejecutar una sola vez)
+// ==========================================
+
+function setupGithub() {
+  var props = PropertiesService.getScriptProperties();
+  props.setProperty("GITHUB_TOKEN", "PEGA_TU_TOKEN_AQUI");
+  props.setProperty("GITHUB_REPO", "iamandresfer/Invitaciones-de-Boda-Personalizada");
+  props.setProperty("GITHUB_BRANCH", "main");
+  Logger.log("Configuracion guardada. Verificar con getGithubConfig()");
+}
+
+function getGithubConfig() {
+  var props = PropertiesService.getScriptProperties();
+  return {
+    token: props.getProperty("GITHUB_TOKEN"),
+    repo: props.getProperty("GITHUB_REPO"),
+    branch: props.getProperty("GITHUB_BRANCH") || "main"
+  };
+}
+
+// ==========================================
+// DISPATCH
+// ==========================================
 
 function doPost(e) {
   try {
     var data = JSON.parse(e.postData.contents);
     var action = data.action || "rsvp";
 
-    if (action === "rsvp") {
-      return handleRsvp(data);
-    } else if (action === "saveInvitados") {
-      return handleSaveInvitados(data);
-    } else if (action === "addInvitado") {
-      return handleAddInvitado(data);
-    } else if (action === "updateInvitado") {
-      return handleUpdateInvitado(data);
-    } else if (action === "deleteInvitado") {
-      return handleDeleteInvitado(data);
-    }
+    if (action === "rsvp") return handleRsvp(data);
+    if (action === "saveInvitados") return handleSaveInvitados(data);
 
     return ContentService
       .createTextOutput(JSON.stringify({ error: "Unknown action: " + action }))
@@ -52,11 +59,8 @@ function doGet(e) {
   try {
     var action = (e && e.parameter && e.parameter.action) || "getInvitados";
 
-    if (action === "getInvitados") {
-      return handleGetInvitados();
-    } else if (action === "getRespuestas") {
-      return handleGetRespuestas();
-    }
+    if (action === "getInvitados") return handleGetInvitados();
+    if (action === "getRespuestas") return handleGetRespuestas();
 
     return handleGetInvitados();
 
@@ -115,7 +119,7 @@ function handleGetRespuestas() {
 }
 
 // ==========================================
-// INVITADOS (CRUD)
+// INVITADOS (CRUD + auto-commit)
 // ==========================================
 
 function handleGetInvitados() {
@@ -171,73 +175,107 @@ function handleSaveInvitados(data) {
     ]);
   }
 
+  // Auto-commit CSV a GitHub
+  var commitResult = commitCsvToGitHub(invitados);
+
   return ContentService
-    .createTextOutput(JSON.stringify({ success: true, count: invitados.length }))
+    .createTextOutput(JSON.stringify({
+      success: true,
+      count: invitados.length,
+      github: commitResult
+    }))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-function handleAddInvitado(data) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Invitados");
-  if (!sheet) {
-    sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet("Invitados");
-    sheet.appendRow(["nombre", "cupos", "slug", "activo"]);
+// ==========================================
+// GITHUB API
+// ==========================================
+
+function commitCsvToGitHub(invitados) {
+  var config = getGithubConfig();
+  if (!config.token || config.token === "PEGA_TU_TOKEN_AQUI") {
+    return { skipped: true, reason: "GitHub token not configured" };
   }
 
-  sheet.appendRow([
-    data.nombre || "",
-    data.cupos || 1,
-    data.slug || "",
-    "true"
-  ]);
+  try {
+    var csv = "nombre,cupos,slug,activo\n";
+    for (var i = 0; i < invitados.length; i++) {
+      var inv = invitados[i];
+      csv += csvEscape(inv.nombre) + "," + (inv.cupos || 1) + "," + csvEscape(inv.slug) + "," + (inv.activo !== false ? "true" : "false") + "\n";
+    }
 
-  return ContentService
-    .createTextOutput(JSON.stringify({ success: true }))
-    .setMimeType(ContentService.MimeType.JSON);
+    var encoded = Utilities.base64Encode(csv);
+    var message = "auto: actualizar lista de invitados (" + invitados.length + " guests)";
+    var sha = getFileSHA(config, "invitados.csv");
+
+    var body = {
+      message: message,
+      content: encoded,
+      branch: config.branch
+    };
+
+    if (sha) {
+      body.sha = sha;
+    }
+
+    var response = UrlFetchApp.fetch(
+      "https://api.github.com/repos/" + config.repo + "/contents/invitados.csv",
+      {
+        method: "put",
+        contentType: "application/json",
+        headers: {
+          "Authorization": "token " + config.token,
+          "Accept": "application/vnd.github.v3+json",
+          "User-Agent": "Boda-Gloria-Juan"
+        },
+        payload: JSON.stringify(body),
+        muteHttpExceptions: true
+      }
+    );
+
+    var result = JSON.parse(response.getContentText());
+
+    if (response.getResponseCode() === 200 || response.getResponseCode() === 201) {
+      return { success: true, commit: result.commit ? result.commit.sha : null };
+    } else {
+      return { success: false, error: result.message || "Unknown error" };
+    }
+
+  } catch (error) {
+    return { success: false, error: error.toString() };
+  }
 }
 
-function handleUpdateInvitado(data) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Invitados");
-  if (!sheet) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ error: "Sheet 'Invitados' not found" }))
-      .setMimeType(ContentService.MimeType.JSON);
+function getFileSHA(config, filePath) {
+  try {
+    var response = UrlFetchApp.fetch(
+      "https://api.github.com/repos/" + config.repo + "/contents/" + filePath + "?ref=" + config.branch,
+      {
+        method: "get",
+        headers: {
+          "Authorization": "token " + config.token,
+          "Accept": "application/vnd.github.v3+json",
+          "User-Agent": "Boda-Gloria-Juan"
+        },
+        muteHttpExceptions: true
+      }
+    );
+
+    if (response.getResponseCode() === 200) {
+      var data = JSON.parse(response.getContentText());
+      return data.sha;
+    }
+    return null;
+
+  } catch (error) {
+    return null;
   }
-
-  var row = data._row;
-  if (!row || row < 2) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ error: "Invalid row" }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-
-  sheet.getRange(row, 1).setValue(data.nombre || "");
-  sheet.getRange(row, 2).setValue(data.cupos || 1);
-  sheet.getRange(row, 3).setValue(data.slug || "");
-  sheet.getRange(row, 4).setValue(data.activo !== false ? "true" : "false");
-
-  return ContentService
-    .createTextOutput(JSON.stringify({ success: true }))
-    .setMimeType(ContentService.MimeType.JSON);
 }
 
-function handleDeleteInvitado(data) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Invitados");
-  if (!sheet) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ error: "Sheet 'Invitados' not found" }))
-      .setMimeType(ContentService.MimeType.JSON);
+function csvEscape(value) {
+  var str = String(value || "");
+  if (str.indexOf(",") !== -1 || str.indexOf('"') !== -1 || str.indexOf("\n") !== -1) {
+    return '"' + str.replace(/"/g, '""') + '"';
   }
-
-  var row = data._row;
-  if (!row || row < 2) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ error: "Invalid row" }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-
-  sheet.deleteRow(row);
-
-  return ContentService
-    .createTextOutput(JSON.stringify({ success: true }))
-    .setMimeType(ContentService.MimeType.JSON);
+  return str;
 }
