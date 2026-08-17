@@ -56,9 +56,10 @@ function main() {
   var template = fs.readFileSync(TEMPLATE_PATH, "utf-8");
   var guests = parseCSV(csvText);
 
-  if (!fs.existsSync(OUTPUT_DIR)) {
-    fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+  if (fs.existsSync(OUTPUT_DIR)) {
+    fs.rmSync(OUTPUT_DIR, { recursive: true });
   }
+  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
   console.log("Generando " + guests.length + " invitaciones...\n");
 
