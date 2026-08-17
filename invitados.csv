@@ -1,5 +1,3 @@
-nombre,cupos,slug
-"Carlos Navas",2,carlos-navas
-"Maria Lopez",1,maria-lopez
-"Roberto y Ana Silva",3,roberto-y-ana-silva
-"Patricia Mera",1,patricia-mera
+nombre,cupos,slug,activo
+Andr?s Alde?n,2,andres-aldean,true
+Eduardo Guti?rrez,3,eduardo-gutierrez,true
