@@ -313,8 +313,7 @@
             <tr>
               <th onclick="sortTable(0)">Nombre</th>
               <th onclick="sortTable(1)">Adicionales</th>
-              <th onclick="sortTable(2)">Acompañantes</th>
-              <th onclick="sortTable(3)">Estado</th>
+              <th onclick="sortTable(2)">Estado</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -328,15 +327,14 @@
         <h3 class="section-subtitle">Confirmados</h3>
         <div class="table-wrapper">
           <table>
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Adicionales</th>
-                <th>Acompañantes</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
+<thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Adicionales</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
             <tbody id="confirmaciones-confirmados">
             </tbody>
           </table>
@@ -580,7 +578,6 @@
       return "<tr>"
         + "<td>" + escHtml(m.nombre || "-") + "</td>"
         + "<td>" + (1 + (m.adicionales || 0)) + "</td>"
-        + "<td>" + (m.estado === "Pendiente" ? "-" : (1 + (m.adicionalesConfirmados || 0))) + "</td>"
         + "<td class='status-" + estadoClass + "'>" + m.estado + "</td>"
         + '<td><div class="actions-cell">'
         + '<button class="btn btn-sm btn-asiste"' + btnAsisteDisabled + ' onclick="toggleEstado(\'' + escName + '\', \'Confirmado\')">Asiste</button>'
@@ -955,7 +952,7 @@
 
     var sortDir = 1;
     function sortTable(col) {
-      var keys = ["nombre", "adicionales", "adicionalesConfirmados", "estado"];
+      var keys = ["nombre", "adicionales", "estado"];
       var key = keys[col]; sortDir *= -1;
       allMerged.sort(function(a, b) {
         var va = a[key] || "", vb = b[key] || "";
