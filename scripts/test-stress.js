@@ -53,20 +53,20 @@ function parseCSV(text) {
   return rows;
 }
 
-const csv1 = "nombre,cupos,slug\nAndrés Aldeán,2,andres-aldean\nEduardo Gutiérrez,3,eduardo-gutierrez\nAriel Torres,2,ariel-torres";
+const csv1 = "nombre,adicionales,slug\nAndrés Aldeán,1,andres-aldean\nEduardo Gutiérrez,2,eduardo-gutierrez\nAriel Torres,1,ariel-torres";
 const guests1 = parseCSV(csv1);
 assert(guests1.length === 3, "CSV con 3 invitados parsea correctamente");
 assert(guests1[0].nombre === "Andrés Aldeán", "Nombre con acentos se preserva");
-assert(guests1[0].cupos === "2", "Cupos se leen como string del CSV");
+assert(guests1[0].adicionales === "1", "Adicionales se leen como string del CSV");
 assert(guests1[0].slug === "andres-aldean", "Slug se preserva");
 
-const csv2 = "nombre,cupos,slug\nMaria Jose,1,maria-jose\n\"Perez, Juan\",4,perez-juan";
+const csv2 = "nombre,adicionales,slug\nMaria Jose,0,maria-jose\n\"Perez, Juan\",3,perez-juan";
 const guests2 = parseCSV(csv2);
 assert(guests2.length === 2, "CSV con nombre entre comas parsea correctamente");
 assert(guests2[1].nombre === "Perez, Juan", "Nombre con coma entre comillas se preserva");
-assert(guests2[1].cupos === "4", "Cupos correctos con nombre entre comas");
+assert(guests2[1].adicionales === "3", "Adicionales correctos con nombre entre comas");
 
-const csv3 = "nombre,cupos,slug\n,1,";
+const csv3 = "nombre,adicionales,slug\n,0,";
 const guests3 = parseCSV(csv3);
 assert(guests3.length === 1, "CSV con nombre vacio se parsea");
 assert(guests3[0].nombre === "", "Nombre vacio es string vacio");
@@ -102,34 +102,35 @@ console.log("\n=== 3. GENERATOR ===");
 
 const template = fs.readFileSync(TEMPLATE_PATH, "utf-8");
 assert(template.includes("{{NOMBRE}}"), "Template tiene placeholder NOMBRE");
-assert(template.includes("{{CUPOS}}"), "Template tiene placeholder CUPOS");
+assert(template.includes("{{ADICIONALES}}"), "Template tiene placeholder ADICIONALES");
 assert(template.includes("{{SLUG}}"), "Template tiene placeholder SLUG");
-assert(template.includes("{{CUPOS_OPTIONS}}"), "Template tiene placeholder CUPOS_OPTIONS");
+assert(template.includes("{{ADICIONALES_OPTIONS}}"), "Template tiene placeholder ADICIONALES_OPTIONS");
 assert(template.includes('src="main.js"') || template.includes('src="main.js?'), "Template referencia main.js");
 
-// Simulate generation with cuposOptions
-function cuposOptions(cupos) {
-  var html = "";
-  var n = parseInt(cupos);
+// Simulate generation with adicionalesOptions
+function adicionalesOptions(adicionales) {
+  var html = '<option value="0">Solo yo</option>\n';
+  var n = parseInt(adicionales) || 0;
   for (var i = 1; i <= n; i++) {
     var selected = i === n ? ' selected' : "";
-    html += '<option value="' + i + '"' + selected + '>' + i + " " + (i === 1 ? "cupo" : "cupos") + "</option>\n";
+    html += '<option value="' + i + '"' + selected + '>' + i + " " + (i === 1 ? "acompañante" : "acompañantes") + "</option>\n";
   }
   return html;
 }
 
-const testGuest = { nombre: "Test Guest", cupos: "3", slug: "test-guest" };
+const testGuest = { nombre: "Test Guest", adicionales: "2", slug: "test-guest" };
 let html = template
   .replace(/\{\{NOMBRE\}\}/g, testGuest.nombre)
-  .replace(/\{\{CUPOS\}\}/g, testGuest.cupos)
+  .replace(/\{\{ADICIONALES\}\}/g, testGuest.adicionales)
   .replace(/\{\{SLUG\}\}/g, testGuest.slug)
-  .replace(/\{\{CUPOS_OPTIONS\}\}/g, cuposOptions(testGuest.cupos))
+  .replace(/\{\{ADICIONALES_OPTIONS\}\}/g, adicionalesOptions(testGuest.adicionales))
   .replace(/href="styles\.css(\?[^"]*)?"/g, 'href="../src/styles.css$1"')
   .replace(/src="main\.js(\?[^"]*)?"/g, 'src="../src/main.js$1"');
 
 assert(html.includes("Test Guest"), "Generator reemplaza NOMBRE");
 assert(html.includes('value="Test Guest"'), "Generator pone nombre en input RSVP");
-assert(html.includes('3 cupos'), "Generator genera opciones de cupos correctas");
+assert(html.includes("2 acompañantes"), "Generator genera opciones de acompañantes correctas");
+assert(html.includes("Solo yo"), "Opcion 'Solo yo' presente");
 assert(html.includes("../src/main.js"), "Generator pone path relativo correcto para main.js");
 assert(html.includes("../src/styles.css"), "Generator pone path relativo correcto para styles.css");
 assert(!html.includes("{{NOMBRE}}"), "No quedan placeholders sin reemplazar");
@@ -154,20 +155,20 @@ function simulateRsvpDedup(existingRsvps, newRsvp) {
 let rsvps = [];
 let result;
 
-result = simulateRsvpDedup(rsvps, { nombre: "Andres", cupos: 2 });
+result = simulateRsvpDedup(rsvps, { nombre: "Andres", adicionales: 1 });
 assert(result.action === "appended", "Primer RSVP: se agrega");
 assert(result.list.length === 1, "Lista tiene 1 elemento");
 
-result = simulateRsvpDedup(rsvps, { nombre: "Andres", cupos: 1 });
+result = simulateRsvpDedup(rsvps, { nombre: "Andres", adicionales: 0 });
 assert(result.action === "updated", "Segundo RSVP mismo nombre: se actualiza");
 assert(result.list.length === 1, "Lista sigue teniendo 1 elemento");
-assert(result.list[0].cupos === 1, "Cupos se actualizo a 1");
+assert(result.list[0].adicionales === 0, "Adicionales se actualizo a 0");
 
-result = simulateRsvpDedup(rsvps, { nombre: "Eduardo", cupos: 3 });
+result = simulateRsvpDedup(rsvps, { nombre: "Eduardo", adicionales: 2 });
 assert(result.action === "appended", "RSVP diferente nombre: se agrega");
 assert(result.list.length === 2, "Lista tiene 2 elementos");
 
-result = simulateRsvpDedup(rsvps, { nombre: "andres", cupos: 2 });
+result = simulateRsvpDedup(rsvps, { nombre: "andres", adicionales: 1 });
 assert(result.action === "updated", "Dedup case-insensitive funciona");
 assert(result.list.length === 2, "Lista sigue teniendo 2 elementos");
 
@@ -192,8 +193,8 @@ function mergeData(invitados, respuestas) {
     var rsvp = rsvpMap[normalize(inv.nombre)];
     merged.push({
       nombre: inv.nombre || "",
-      cupos: inv.cupos || 1,
-      cuposConfirmados: rsvp ? (parseInt(rsvp["Cupos Confirmados"]) || 0) : 0,
+      adicionales: parseInt(inv.adicionales) || 0,
+      adicionalesConfirmados: rsvp ? (parseInt(rsvp["Adicionales Confirmados"]) || 0) : 0,
       estado: rsvp ? (rsvp.Estado || "Pendiente") : "Pendiente"
     });
   }
@@ -203,75 +204,79 @@ function mergeData(invitados, respuestas) {
 function calcStats(invitados, respuestas) {
   var merged = mergeData(invitados, respuestas);
   var totalInv = invitados.length;
-  var totalCupos = 0;
+  var totalPersonas = 0;
   for (var i = 0; i < invitados.length; i++) {
-    totalCupos += parseInt(invitados[i].cupos) || 0;
+    totalPersonas += 1 + (parseInt(invitados[i].adicionales) || 0);
   }
-  var confirmadas = 0, pendientes = 0, noAsistenCupos = 0;
+  var confirmadas = 0, pendientes = 0, noAsistenPersonas = 0;
   for (var j = 0; j < merged.length; j++) {
     var m = merged[j];
     if (m.estado === "Confirmado") {
-      confirmadas += m.cuposConfirmados;
+      confirmadas += 1 + (m.adicionalesConfirmados || 0);
     } else if (m.estado === "No asiste") {
-      noAsistenCupos += m.cupos;
+      noAsistenPersonas += 1 + (m.adicionales || 0);
     } else {
       pendientes++;
     }
   }
-  return { totalInv, totalCupos, esperadas: totalCupos - noAsistenCupos, confirmadas, pendientes, noAsisten: noAsistenCupos, merged };
+  return { totalInv, totalPersonas, esperadas: totalPersonas - noAsistenPersonas, confirmadas, pendientes, noAsisten: noAsistenPersonas, merged };
 }
 
 let stats;
 
 // Case 1: 2 invitados, 1 confirmed, 1 pending
+// Andres: 1 adicional + 1 = 2 personas
+// Eduardo: 2 adicionales + 1 = 3 personas
 stats = calcStats(
   [
-    { nombre: "Andres", cupos: 2 },
-    { nombre: "Eduardo", cupos: 3 },
+    { nombre: "Andres", adicionales: 1 },
+    { nombre: "Eduardo", adicionales: 2 },
   ],
   [
-    { Nombre: "Andres", Estado: "Confirmado", "Cupos Confirmados": 2, Mensaje: "Nos vemos" },
+    { Nombre: "Andres", Estado: "Confirmado", "Adicionales Confirmados": 1, Mensaje: "Nos vemos" },
   ]
 );
 assert(stats.totalInv === 2, "Stats: 2 invitaciones");
-assert(stats.totalCupos === 5, "Stats: 5 personas en cupos totales");
+assert(stats.totalPersonas === 5, "Stats: 5 personas totales (2+3)");
 assert(stats.esperadas === 5, "Stats: 5 personas esperadas (nadie declina)");
-assert(stats.confirmadas === 2, "Stats: 2 personas confirmadas (solo Andres)");
+assert(stats.confirmadas === 2, "Stats: 2 personas confirmadas (Andres: 1+1)");
 assert(stats.pendientes === 1, "Stats: 1 pendiente (Eduardo)");
 assert(stats.noAsisten === 0, "Stats: 0 no asisten");
 assert(stats.merged.length === 2, "Stats: merged tiene 2 registros");
 assert(stats.merged[0].estado === "Confirmado", "Stats: Andres confirmado");
 assert(stats.merged[1].estado === "Pendiente", "Stats: Eduardo pendiente");
 
-// Case 2: partial confirmation - Andres confirms only 1 of 2 cupos
+// Case 2: partial confirmation
+// Andres confirma solo a 1 acompañante (de 1 max) → 2 personas
+// Eduardo no asiste → 3 personas perdidas
 stats = calcStats(
   [
-    { nombre: "Andres", cupos: 2 },
-    { nombre: "Eduardo", cupos: 3 },
+    { nombre: "Andres", adicionales: 1 },
+    { nombre: "Eduardo", adicionales: 2 },
   ],
   [
-    { Nombre: "Andres", Estado: "Confirmado", "Cupos Confirmados": 1, Mensaje: "" },
-    { Nombre: "Eduardo", Estado: "No asiste", "Cupos Confirmados": 0, Mensaje: "No puedo" },
+    { Nombre: "Andres", Estado: "Confirmado", "Adicionales Confirmados": 1, Mensaje: "" },
+    { Nombre: "Eduardo", Estado: "No asiste", "Adicionales Confirmados": 0, Mensaje: "No puedo" },
   ]
 );
-assert(stats.totalCupos === 5, "Stats parcial: 5 cupos totales");
+assert(stats.totalPersonas === 5, "Stats parcial: 5 personas totales");
 assert(stats.esperadas === 2, "Stats parcial: 2 esperadas (Eduardo declina, 5-3=2)");
-assert(stats.confirmadas === 1, "Stats parcial: Andres confirma solo 1");
+assert(stats.confirmadas === 2, "Stats parcial: Andres confirma 1+1=2");
 assert(stats.pendientes === 0, "Stats parcial: 0 pendientes (ambos respondieron)");
-assert(stats.noAsisten === 3, "Stats parcial: Eduardo no asiste, 3 cupos");
+assert(stats.noAsisten === 3, "Stats parcial: Eduardo no asiste, 1+2=3 personas");
 
-// Case 3: deleted guest removes cupos from count
+// Case 3: deleted guest
 stats = calcStats(
   [
-    { nombre: "Andres", cupos: 2 },
+    { nombre: "Andres", adicionales: 1 },
   ],
   [
-    { Nombre: "Andres", Estado: "Confirmado", "Cupos Confirmados": 2 },
-    { Nombre: "Eduardo", Estado: "Confirmado", "Cupos Confirmados": 3 },
+    { Nombre: "Andres", Estado: "Confirmado", "Adicionales Confirmados": 1 },
+    { Nombre: "Eduardo", Estado: "Confirmado", "Adicionales Confirmados": 2 },
   ]
 );
 assert(stats.totalInv === 1, "Stats delete: 1 invitacion (Eduardo borrado)");
-assert(stats.totalCupos === 2, "Stats delete: solo 2 cupos totales");
+assert(stats.totalPersonas === 2, "Stats delete: solo 2 personas totales");
 assert(stats.esperadas === 2, "Stats delete: 2 esperadas");
 assert(stats.confirmadas === 2, "Stats delete: 2 confirmadas (solo Andres)");
 assert(stats.merged.length === 1, "Stats delete: merged solo tiene Andres");
@@ -280,48 +285,48 @@ assert(stats.merged[0].nombre === "Andres", "Stats delete: Andres en merged");
 // Case 4: empty
 stats = calcStats([], []);
 assert(stats.totalInv === 0, "Stats vacio: 0 invitaciones");
-assert(stats.totalCupos === 0, "Stats vacio: 0 cupos totales");
+assert(stats.totalPersonas === 0, "Stats vacio: 0 personas totales");
 assert(stats.esperadas === 0, "Stats vacio: 0 esperadas");
 assert(stats.confirmadas === 0, "Stats vacio: 0 confirmadas");
 assert(stats.pendientes === 0, "Stats vacio: 0 pendientes");
 
 // Case 5: RSVP name normalization (accents)
 stats = calcStats(
-  [{ nombre: "Andrés Aldeán", cupos: 2 }],
-  [{ Nombre: "Andres Aldean", Estado: "Confirmado", "Cupos Confirmados": 2 }]
+  [{ nombre: "Andrés Aldeán", adicionales: 1 }],
+  [{ Nombre: "Andres Aldean", Estado: "Confirmado", "Adicionales Confirmados": 1 }]
 );
-assert(stats.confirmadas === 2, "Stats normalize: nombre con/.sin tildes matchea");
+assert(stats.confirmadas === 2, "Stats normalize: nombre con/.sin tildes matchea (1+1=2)");
 assert(stats.merged[0].estado === "Confirmado", "Stats normalize: estado correcto");
 
 // Case 6: toggle Confirmado -> No asiste reduces esperadas
 stats = calcStats(
   [
-    { nombre: "Andres", cupos: 2 },
-    { nombre: "Luis", cupos: 3 },
+    { nombre: "Andres", adicionales: 1 },
+    { nombre: "Luis", adicionales: 2 },
   ],
   [
-    { Nombre: "Andres", Estado: "Confirmado", "Cupos Confirmados": 2 },
-    { Nombre: "Luis", Estado: "No asiste", "Cupos Confirmados": 0 },
+    { Nombre: "Andres", Estado: "Confirmado", "Adicionales Confirmados": 1 },
+    { Nombre: "Luis", Estado: "No asiste", "Adicionales Confirmados": 0 },
   ]
 );
 assert(stats.esperadas === 2, "Toggle: Luis No asiste -> esperadas = 5-3 = 2");
-assert(stats.confirmadas === 2, "Toggle: Andres sigue confirmado");
-assert(stats.noAsisten === 3, "Toggle: Luis 3 cupos no asisten");
+assert(stats.confirmadas === 2, "Toggle: Andres sigue confirmado (1+1=2)");
+assert(stats.noAsisten === 3, "Toggle: Luis no asiste, 1+2=3 personas");
 assert(stats.pendientes === 0, "Toggle: 0 pendientes");
 
 // Case 7: toggle No asiste -> Confirmado restaura esperadas
 stats = calcStats(
   [
-    { nombre: "Andres", cupos: 2 },
-    { nombre: "Luis", cupos: 3 },
+    { nombre: "Andres", adicionales: 1 },
+    { nombre: "Luis", adicionales: 2 },
   ],
   [
-    { Nombre: "Andres", Estado: "Confirmado", "Cupos Confirmados": 2 },
-    { Nombre: "Luis", Estado: "Confirmado", "Cupos Confirmados": 3 },
+    { Nombre: "Andres", Estado: "Confirmado", "Adicionales Confirmados": 1 },
+    { Nombre: "Luis", Estado: "Confirmado", "Adicionales Confirmados": 2 },
   ]
 );
 assert(stats.esperadas === 5, "Reactivar: Luis vuelve -> esperadas = 5");
-assert(stats.confirmadas === 5, "Reactivar: ambos confirmados = 2+3");
+assert(stats.confirmadas === 5, "Reactivar: ambos confirmados = 2+3=5");
 
 // =============================================
 // 6. CLEAN RSVPS LOGIC (simulated)
@@ -365,11 +370,12 @@ assert(invHtml.includes("<!DOCTYPE html>"), "HTML es documento valido");
 assert(invHtml.includes('href="../src/styles.css"'), "CSS path correcto");
 assert(invHtml.includes('src="../src/main.js?v=2"'), "JS path correcto con cache bust");
 assert(invHtml.includes("Andrés Aldeán"), "Nombre del invitado en HTML");
-assert(invHtml.includes('value="2"'), "Cupos preseleccionados en RSVP");
-assert(invHtml.includes('selected'), "Option max cupos tiene selected");
+assert(invHtml.includes('value="1"'), "Adicionales preseleccionados en RSVP");
+assert(invHtml.includes('selected'), "Option max adicionales tiene selected");
 assert(invHtml.includes("rsvp-debug-log"), "Debug overlay presente");
 assert(invHtml.includes("INVITADO"), "Variable INVITADO definida");
 assert(invHtml.includes("andres-aldean"), "Slug en HTML");
+assert(invHtml.includes("adicionales: 1"), "INVITADO usa propiedad adicionales");
 assert(!invHtml.includes("TU_URL_DE_APPS_SCRIPT"), "No hay placeholder URL");
 
 // =============================================

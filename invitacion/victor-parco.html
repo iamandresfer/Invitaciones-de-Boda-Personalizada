@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{OG_TITLE}}</title>
+  <title>Gloria & Juan te invitan, Victor Parco</title>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,20 +11,20 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Great+Vibes&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 
   <!-- Styles -->
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="../src/styles.css">
 
   <!-- Open Graph -->
-  <meta property="og:title" content="{{OG_TITLE}}">
-  <meta property="og:description" content="{{OG_DESC}}">
-  <meta property="og:image" content="{{OG_IMAGE}}">
-  <meta property="og:url" content="{{OG_URL}}">
+  <meta property="og:title" content="Gloria & Juan te invitan, Victor Parco">
+  <meta property="og:description" content="Estas invitado a nuestra boda. 2026-11-08 - Santo Domingo, Ecuador">
+  <meta property="og:image" content="https://gloria-y-juan.vercel.app/assets/images/og-preview.jpg">
+  <meta property="og:url" content="https://gloria-y-juan.vercel.app/invitacion/victor-parco.html">
   <meta property="og:type" content="website">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{{OG_TITLE}}">
-  <meta name="twitter:description" content="{{OG_DESC}}">
-  <meta name="twitter:image" content="{{OG_IMAGE}}">
+  <meta name="twitter:title" content="Gloria & Juan te invitan, Victor Parco">
+  <meta name="twitter:description" content="Estas invitado a nuestra boda. 2026-11-08 - Santo Domingo, Ecuador">
+  <meta name="twitter:image" content="https://gloria-y-juan.vercel.app/assets/images/og-preview.jpg">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="../src/assets/images/favicon.png">
@@ -50,7 +50,7 @@
     <div class="hero-overlay"></div>
     <div class="hero-content">
       <p class="hero-invite">Gloria &amp; Juan te invitan</p>
-      <h1 class="hero-name">{{NOMBRE}}</h1>
+      <h1 class="hero-name">Victor Parco</h1>
       <div class="hero-divider"></div>
       <p class="hero-date">8 de Noviembre, 2026</p>
     </div>
@@ -86,7 +86,7 @@
   <section class="section message-section fade-in" id="mensaje">
     <div class="container">
       <div class="divider-ornament">&#10045;</div>
-      <p class="message-text">{{MENSAJE_NOVIOS}}</p>
+      <p class="message-text">Los novios le invitan a usted a compartir un momento especial en nuestras vidas.</p>
       <div class="divider-ornament">&#10045;</div>
     </div>
   </section>
@@ -101,16 +101,16 @@
 
       <div class="detail-card">
         <h3 class="detail-heading">Ceremonia</h3>
-        <p class="detail-place">{{CEREMONIA_LUGAR}}</p>
-        <a href="{{CEREMONIA_MAPS}}" target="_blank" rel="noopener" class="detail-maps">Ver en Google Maps</a>
+        <p class="detail-place">Iglesia de Santo Domingo</p>
+        <a href="https://maps.google.com/?q=Santo+Domingo+Ecuador" target="_blank" rel="noopener" class="detail-maps">Ver en Google Maps</a>
       </div>
 
       <div class="detail-divider"></div>
 
       <div class="detail-card">
         <h3 class="detail-heading">Recepción</h3>
-        <p class="detail-place">{{RECEPCION_LUGAR}}</p>
-        <a href="{{RECEPCION_MAPS}}" target="_blank" rel="noopener" class="detail-maps">Ver en Google Maps</a>
+        <p class="detail-place">Salon de Eventos</p>
+        <a href="https://maps.google.com/?q=Santo+Domingo+Ecuador" target="_blank" rel="noopener" class="detail-maps">Ver en Google Maps</a>
       </div>
     </div>
   </section>
@@ -119,7 +119,7 @@
   <section class="section dress-section fade-in" id="vestimenta">
     <div class="container">
       <h2 class="section-title">Código de Vestimenta</h2>
-      <p class="dress-code">{{DRESS_CODE}}</p>
+      <p class="dress-code">Formal / Elegante</p>
     </div>
   </section>
 
@@ -140,12 +140,13 @@
       <form id="rsvp-form" class="rsvp-form">
         <div class="form-group">
           <label for="rsvp-nombre">Nombre</label>
-          <input type="text" id="rsvp-nombre" name="nombre" value="{{NOMBRE}}" readonly>
+          <input type="text" id="rsvp-nombre" name="nombre" value="Victor Parco" readonly>
         </div>
         <div class="form-group">
           <label for="rsvp-adicionales">¿Cuantos acompañantes?</label>
           <select id="rsvp-adicionales" name="adicionales">
-            {{ADICIONALES_OPTIONS}}
+            <option value="0">Solo yo</option>
+
           </select>
         </div>
         <button type="submit" class="btn btn-primary btn-submit">Confirmar Asistencia</button>
@@ -160,7 +161,7 @@
   <!-- 8. Cierre -->
   <section class="section closing-section fade-in" id="cierre">
     <div class="container">
-      <p class="closing-thanks">Gracias, {{NOMBRE}}</p>
+      <p class="closing-thanks">Gracias, Victor Parco</p>
       <div class="monogram">G<span class="monogram-ampersand">&amp;</span>J</div>
       <p class="closing-date">08 · 11 · 2026</p>
     </div>
@@ -177,12 +178,12 @@
   <!-- Script: expose globals + load main.js -->
   <script>
     var INVITADO = {
-      nombre: "{{NOMBRE}}",
-      adicionales: {{ADICIONALES}},
-      slug: "{{SLUG}}"
+      nombre: "Victor Parco",
+      adicionales: 0,
+      slug: "victor-parco"
     };
-    var EVENTO_FECHA = "{{FECHA_ISO}}";
+    var EVENTO_FECHA = "2026-11-08";
   </script>
-  <script src="main.js?v=2"></script>
+  <script src="../src/main.js?v=2"></script>
 </body>
 </html>

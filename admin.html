@@ -273,7 +273,7 @@
             <tr>
               <th style="width:30px">#</th>
               <th>Nombre</th>
-              <th style="width:100px">Cupos</th>
+              <th style="width:100px">Adicionales</th>
               <th style="width:180px">Acciones</th>
             </tr>
           </thead>
@@ -309,8 +309,8 @@
           <thead>
             <tr>
               <th onclick="sortTable(0)">Nombre</th>
-              <th onclick="sortTable(1)">Cupos Asignados</th>
-              <th onclick="sortTable(2)">Cupos Confirmados</th>
+              <th onclick="sortTable(1)">Adicionales</th>
+              <th onclick="sortTable(2)">Acompañantes</th>
               <th onclick="sortTable(3)">Estado</th>
               <th>Acciones</th>
             </tr>
@@ -328,8 +328,8 @@
             <thead>
               <tr>
                 <th>Nombre</th>
-                <th>Cupos Asignados</th>
-                <th>Cupos Confirmados</th>
+                <th>Adicionales</th>
+                <th>Acompañantes</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
@@ -486,8 +486,8 @@
         var rsvp = rsvpMap[normalize(inv.nombre)];
         allMerged.push({
           nombre: inv.nombre || "",
-          cupos: inv.cupos || 1,
-          cuposConfirmados: rsvp ? (parseInt(rsvp["Cupos Confirmados"]) || 0) : 0,
+          adicionales: parseInt(inv.adicionales) || 0,
+          adicionalesConfirmados: rsvp ? (parseInt(rsvp["Adicionales Confirmados"]) || 0) : 0,
           estado: rsvp ? (rsvp["Estado"] || "Pendiente") : "Pendiente"
         });
       }
@@ -498,30 +498,30 @@
     // ==========================================
     function updateStats() {
       var totalInv = allInvitados.length;
-      var totalCupos = 0;
+      var totalPersonas = 0;
       for (var i = 0; i < allInvitados.length; i++) {
-        totalCupos += parseInt(allInvitados[i].cupos) || 0;
+        totalPersonas += 1 + (parseInt(allInvitados[i].adicionales) || 0);
       }
 
-      var confirmadas = 0, pendientes = 0, noAsistenCupos = 0;
+      var confirmadas = 0, pendientes = 0, noAsistenPersonas = 0;
       for (var j = 0; j < allMerged.length; j++) {
         var m = allMerged[j];
         if (m.estado === "Confirmado") {
-          confirmadas += m.cuposConfirmados;
+          confirmadas += 1 + (m.adicionalesConfirmados || 0);
         } else if (m.estado === "No asiste") {
-          noAsistenCupos += m.cupos;
+          noAsistenPersonas += 1 + (m.adicionales || 0);
         } else {
           pendientes++;
         }
       }
 
-      var esperadas = totalCupos - noAsistenCupos;
+      var esperadas = totalPersonas - noAsistenPersonas;
 
       document.getElementById("stat-inv").textContent = totalInv;
       document.getElementById("stat-esperadas").textContent = esperadas;
       document.getElementById("stat-confirmadas").textContent = confirmadas;
       document.getElementById("stat-pendientes").textContent = pendientes;
-      document.getElementById("stat-no-asisten").textContent = noAsistenCupos;
+      document.getElementById("stat-no-asisten").textContent = noAsistenPersonas;
     }
 
     // ==========================================
@@ -576,8 +576,8 @@
 
       return "<tr>"
         + "<td>" + escHtml(m.nombre || "-") + "</td>"
-        + "<td>" + m.cupos + "</td>"
-        + "<td>" + (m.estado === "Pendiente" ? "-" : m.cuposConfirmados) + "</td>"
+        + "<td>" + (1 + (m.adicionales || 0)) + "</td>"
+        + "<td>" + (m.estado === "Pendiente" ? "-" : (1 + (m.adicionalesConfirmados || 0))) + "</td>"
         + "<td class='status-" + estadoClass + "'>" + m.estado + "</td>"
         + '<td><div class="actions-cell">'
         + '<button class="btn btn-sm btn-asiste"' + btnAsisteDisabled + ' onclick="toggleEstado(\'' + escName + '\', \'Confirmado\')">Asiste</button>'
@@ -660,11 +660,11 @@
         html += '<tr data-slug="' + escHtml(slug) + '">'
           + '<td>' + (i + 1) + '</td>'
           + '<td><input type="text" value="' + escHtml(inv.nombre || "") + '" data-field="nombre"></td>'
-          + '<td><input type="number" value="' + (inv.cupos || 1) + '" min="1" max="20" data-field="cupos"></td>'
+          + '<td><input type="number" value="' + (inv.adicionales || 0) + '" min="0" max="20" data-field="adicionales"></td>'
           + '<td><div class="actions-cell">'
-          + '<button class="btn btn-sm btn-primary btn-ver" onclick="openLink(this)" data-slug="' + escHtml(slug) + '" title="Ver invitacion">Ver</button>'
+          + '<button class="btn btn-sm btn-generar btn-gen" onclick="generarInvitacion(this)" data-slug="' + escHtml(slug) + '" title="Generar esta invitacion">Generar</button>'
           + '<button class="btn btn-sm btn-secondary" onclick="copyLink(this)" title="Copiar link de invitacion">Copiar Link</button>'
-          + '<button class="btn btn-sm btn-generar" onclick="generarInvitacion(this)" data-slug="' + escHtml(slug) + '" title="Generar esta invitacion">Generar</button>'
+          + '<button class="btn btn-sm btn-primary btn-ver" onclick="openLink(this)" data-slug="' + escHtml(slug) + '" title="Ver invitacion">Ver</button>'
           + '<button class="btn btn-sm btn-danger" onclick="removeRow(this)" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>'
           + '</div></td>'
           + '</tr>';
@@ -683,7 +683,7 @@
     }
 
     function addInvitado() {
-      allInvitados.push({ nombre: "", cupos: 1, _row: null });
+      allInvitados.push({ nombre: "", adicionales: 0, _row: null });
       renderInvitadosTable();
       var inputs = document.getElementById("invitados-body").querySelectorAll("input[data-field='nombre']");
       if (inputs.length) inputs[inputs.length - 1].focus();
@@ -802,20 +802,18 @@
           .then(function () {
             clearInterval(interval);
             btn.textContent = "Generado";
-            btn.classList.remove("btn-generating");
+            btn.classList.remove("btn-generating", "btn-generar");
             btn.classList.add("btn-asiste");
-            setTimeout(function() {
-              btn.textContent = "Generar";
-              btn.classList.remove("btn-asiste");
-              btn.classList.add("btn-generar");
-              btn.disabled = false;
-            }, 2000);
+            btn.disabled = true;
+            btn.onclick = null;
+            showToast("Invitacion generada", "success");
           })
           .catch(function () {
             if (attempts >= 20) {
               clearInterval(interval);
               btn.textContent = "Generar";
               btn.classList.remove("btn-generating");
+              btn.classList.add("btn-generar");
               btn.disabled = false;
               showToast("Error al generar. Intenta de nuevo.", "error");
             }
@@ -825,72 +823,31 @@
 
     var BASE_URL = "https://invitaciones-de-boda-personalizada.vercel.app/invitacion/";
 
-    function markAllVerButtons() {
-      var btns = document.querySelectorAll(".btn-ver");
-      for (var i = 0; i < btns.length; i++) {
-        var btn = btns[i];
-        var slug = btn.getAttribute("data-slug");
-        if (!slug) continue;
-        btn.textContent = "Generando...";
-        btn.classList.add("btn-generating");
-        btn.disabled = true;
-        btn.onclick = null;
-        pollInvitation(btn, slug);
-      }
-    }
-
-    function pollInvitation(btn, slug) {
-      var attempts = 0;
-      var maxAttempts = 20;
-      var url = BASE_URL + slug + ".html";
-
-      var interval = setInterval(function () {
-        attempts++;
-        fetch(url, { method: "HEAD", mode: "no-cors" })
-          .then(function () {
-            clearInterval(interval);
-            btn.textContent = "Ver";
-            btn.classList.remove("btn-generating");
-            btn.disabled = false;
-            btn.onclick = function () { openLink(btn); };
-          })
-          .catch(function () {
-            if (attempts >= maxAttempts) {
-              clearInterval(interval);
-              btn.textContent = "Ver";
-              btn.classList.remove("btn-generating");
-              btn.disabled = false;
-              btn.onclick = function () { openLink(btn); };
-            }
-          });
-      }, 3000);
-    }
-
     function checkAllInvitations() {
-      var btns = document.querySelectorAll(".btn-ver");
+      var btns = document.querySelectorAll(".btn-gen");
       for (var i = 0; i < btns.length; i++) {
         var btn = btns[i];
         var slug = btn.getAttribute("data-slug");
         if (!slug) continue;
-        checkSingleInvitation(btn, slug);
+        checkSingleGeneration(btn, slug);
       }
     }
 
-    function checkSingleInvitation(btn, slug) {
+    function checkSingleGeneration(btn, slug) {
       var url = BASE_URL + slug + ".html";
       fetch(url, { method: "HEAD", mode: "no-cors" })
         .then(function () {
-          btn.textContent = "Ver";
-          btn.classList.remove("btn-generating");
-          btn.disabled = false;
-          btn.onclick = function () { openLink(btn); };
-        })
-        .catch(function () {
-          btn.textContent = "Generando...";
-          btn.classList.add("btn-generating");
+          btn.textContent = "Generado";
+          btn.classList.remove("btn-generar", "btn-generating");
+          btn.classList.add("btn-asiste");
           btn.disabled = true;
           btn.onclick = null;
-          pollInvitation(btn, slug);
+        })
+        .catch(function () {
+          btn.textContent = "Generar";
+          btn.classList.remove("btn-asiste", "btn-generating");
+          btn.classList.add("btn-generar");
+          btn.disabled = false;
         });
     }
 
@@ -915,10 +872,10 @@
         var tr = rows[i];
         if (tr.querySelector(".empty-msg")) continue;
         var nombre = tr.querySelector("input[data-field='nombre']").value.trim();
-        var cupos = parseInt(tr.querySelector("input[data-field='cupos']").value) || 1;
+        var adicionales = parseInt(tr.querySelector("input[data-field='adicionales']").value) || 0;
         var slug = toSlug(nombre);
 
-        result.push({ nombre: nombre, cupos: cupos, slug: slug });
+        result.push({ nombre: nombre, adicionales: adicionales, slug: slug });
       }
       return result;
     }
@@ -968,7 +925,7 @@
 
     var sortDir = 1;
     function sortTable(col) {
-      var keys = ["nombre", "cupos", "cuposConfirmados", "estado"];
+      var keys = ["nombre", "adicionales", "adicionalesConfirmados", "estado"];
       var key = keys[col]; sortDir *= -1;
       allMerged.sort(function(a, b) {
         var va = a[key] || "", vb = b[key] || "";

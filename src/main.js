@@ -145,18 +145,18 @@ function initRsvp() {
     submitBtn.disabled = true;
     submitBtn.textContent = "Enviando...";
 
-    var cuposVal = parseInt(document.getElementById("rsvp-cupos").value, 10);
+    var cuposVal = parseInt(document.getElementById("rsvp-adicionales").value, 10);
 
     var payload = {
       action: "rsvp",
       nombre: INVITADO.nombre,
-      cuposAsignados: INVITADO.cupos,
-      cuposConfirmados: cuposVal,
+      adicionalesAsignados: INVITADO.adicionales,
+      adicionalesConfirmados: cuposVal,
       slug: INVITADO.slug,
       fechaEnvio: new Date().toISOString(),
     };
 
-    log("Enviando RSVP: " + INVITADO.nombre + " (" + cuposVal + " cupos)");
+    log("Enviando RSVP: " + INVITADO.nombre + " (+" + cuposVal + " acompañantes)");
     log("URL: " + RSVP_URL);
     log("Payload: " + JSON.stringify(payload));
 
@@ -183,7 +183,7 @@ function initRsvp() {
         log("RSVP exitoso! Guardando en localStorage...");
         localStorage.setItem(getStorageKey(), JSON.stringify({
           nombre: INVITADO.nombre,
-          cupos: payload.cuposConfirmados,
+          adicionales: payload.adicionalesConfirmados,
           fecha: payload.fechaEnvio,
         }));
         log("Redirigiendo a gracias.html...");

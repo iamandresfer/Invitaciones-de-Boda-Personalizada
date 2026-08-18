@@ -143,11 +143,11 @@
           <input type="text" id="rsvp-nombre" name="nombre" value="Luis Aldeán" readonly>
         </div>
         <div class="form-group">
-          <label for="rsvp-cupos">¿Cuantos asistiran?</label>
-          <select id="rsvp-cupos" name="cupos">
-            <option value="1">1 cupo</option>
-<option value="2">2 cupos</option>
-<option value="3" selected>3 cupos</option>
+          <label for="rsvp-adicionales">¿Cuantos acompañantes?</label>
+          <select id="rsvp-adicionales" name="adicionales">
+            <option value="0">Solo yo</option>
+<option value="1">1 acompañante</option>
+<option value="2" selected>2 acompañantes</option>
 
           </select>
         </div>
@@ -181,7 +181,7 @@
   <script>
     var INVITADO = {
       nombre: "Luis Aldeán",
-      cupos: 3,
+      adicionales: 2,
       slug: "luis-aldean"
     };
     var EVENTO_FECHA = "2026-11-08";

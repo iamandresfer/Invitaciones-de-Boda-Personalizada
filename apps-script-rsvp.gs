@@ -113,15 +113,15 @@ function handleRsvp(rsvp) {
   Logger.log("RSVP data: " + JSON.stringify(rsvp));
 
   var sheet = ensureSheet("Respuestas", [
-    "Fecha", "Nombre", "Cupos Asignados", "Cupos Confirmados", "Mensaje", "Estado"
+    "Fecha", "Nombre", "Adicionales Asignados", "Adicionales Confirmados", "Mensaje", "Estado"
   ]);
 
-  var estado = (parseInt(rsvp.cuposConfirmados) > 0) ? "Confirmado" : "Pendiente";
+  var estado = "Confirmado";
   var newRow = [
     new Date(),
     rsvp.nombre || "",
-    rsvp.cuposAsignados || 0,
-    rsvp.cuposConfirmados || 0,
+    rsvp.adicionalesAsignados || 0,
+    rsvp.adicionalesConfirmados || 0,
     rsvp.mensaje || "",
     estado
   ];
@@ -190,35 +190,35 @@ function handleUpdateEstado(data) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Respuestas");
   if (!sheet) {
     sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet("Respuestas");
-    sheet.appendRow(["Fecha", "Nombre", "Cupos Asignados", "Cupos Confirmados", "Mensaje", "Estado"]);
+    sheet.appendRow(["Fecha", "Nombre", "Adicionales Asignados", "Adicionales Confirmados", "Mensaje", "Estado"]);
   }
 
   var nombre = data.nombre || "";
   var nuevoEstado = data.estado || "Pendiente";
 
-  // Look up cupos from Invitados sheet
-  var cuposAsignados = 0;
+  // Look up adicionales from Invitados sheet
+  var adicionalesAsignados = 0;
   var invSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Invitados");
   if (invSheet && invSheet.getLastRow() > 1) {
     var invData = invSheet.getDataRange().getValues();
     var invHeaders = invData[0];
     var invNombreIdx = invHeaders.indexOf("nombre");
-    var invCuposIdx = invHeaders.indexOf("cupos");
-    if (invNombreIdx !== -1 && invCuposIdx !== -1) {
+    var invAdicionalesIdx = invHeaders.indexOf("adicionales");
+    if (invNombreIdx !== -1 && invAdicionalesIdx !== -1) {
       var searchName = nombre.toLowerCase()
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       for (var k = 1; k < invData.length; k++) {
         var rowName = (invData[k][invNombreIdx] || "").toString().toLowerCase()
           .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         if (rowName === searchName) {
-          cuposAsignados = parseInt(invData[k][invCuposIdx]) || 0;
+          adicionalesAsignados = parseInt(invData[k][invAdicionalesIdx]) || 0;
           break;
         }
       }
     }
   }
 
-  var cuposConfirmados = (nuevoEstado === "Confirmado") ? cuposAsignados : 0;
+  var adicionalesConfirmados = (nuevoEstado === "Confirmado") ? adicionalesAsignados : 0;
 
   var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
@@ -238,28 +238,28 @@ function handleUpdateEstado(data) {
       .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     if (rowName === searchName) {
       sheet.getRange(i + 1, estadoIdx + 1).setValue(nuevoEstado);
-      // Also update Cupos Confirmados
-      var ccIdx = headers.indexOf("Cupos Confirmados");
+      // Also update Adicionales Confirmados
+      var ccIdx = headers.indexOf("Adicionales Confirmados");
       if (ccIdx !== -1) {
-        sheet.getRange(i + 1, ccIdx + 1).setValue(cuposConfirmados);
+        sheet.getRange(i + 1, ccIdx + 1).setValue(adicionalesConfirmados);
       }
-      // Also update Cupos Asignados
-      var caIdx = headers.indexOf("Cupos Asignados");
-      if (caIdx !== -1 && cuposAsignados > 0) {
-        sheet.getRange(i + 1, caIdx + 1).setValue(cuposAsignados);
+      // Also update Adicionales Asignados
+      var caIdx = headers.indexOf("Adicionales Asignados");
+      if (caIdx !== -1 && adicionalesAsignados > 0) {
+        sheet.getRange(i + 1, caIdx + 1).setValue(adicionalesAsignados);
       }
       found = true;
-      Logger.log("Estado actualizado: " + nombre + " -> " + nuevoEstado + " (cuposConfirmados: " + cuposConfirmados + ")");
+      Logger.log("Estado actualizado: " + nombre + " -> " + nuevoEstado + " (adicionalesConfirmados: " + adicionalesConfirmados + ")");
       break;
     }
   }
 
   if (!found) {
-    sheet.appendRow([new Date(), nombre, cuposAsignados, cuposConfirmados, "", nuevoEstado]);
-    Logger.log("RSVP creado desde panel: " + nombre + " -> " + nuevoEstado + " (cuposConfirmados: " + cuposConfirmados + ")");
+    sheet.appendRow([new Date(), nombre, adicionalesAsignados, adicionalesConfirmados, "", nuevoEstado]);
+    Logger.log("RSVP creado desde panel: " + nombre + " -> " + nuevoEstado + " (adicionalesConfirmados: " + adicionalesConfirmados + ")");
   }
 
-  return jsonResponse({ success: true, nombre: nombre, estado: nuevoEstado, cuposConfirmados: cuposConfirmados, updated: found });
+  return jsonResponse({ success: true, nombre: nombre, estado: nuevoEstado, adicionalesConfirmados: adicionalesConfirmados, updated: found });
 }
 
 // ==========================================
@@ -320,7 +320,7 @@ function handleSaveInvitados(data) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Invitados");
   if (!sheet) {
     sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet("Invitados");
-    sheet.appendRow(["nombre", "cupos", "slug"]);
+    sheet.appendRow(["nombre", "adicionales", "slug"]);
   }
 
   var lastRow = sheet.getLastRow();
@@ -333,7 +333,7 @@ function handleSaveInvitados(data) {
     var inv = invitados[i];
     sheet.appendRow([
       inv.nombre || "",
-      inv.cupos || 1,
+      inv.adicionales || 0,
       inv.slug || ""
     ]);
   }
@@ -403,10 +403,10 @@ function commitCsvToGitHub(invitados) {
   }
 
   try {
-    var csv = "nombre,cupos,slug\n";
+    var csv = "nombre,adicionales,slug\n";
     for (var i = 0; i < invitados.length; i++) {
       var inv = invitados[i];
-      csv += csvEscape(inv.nombre) + "," + (inv.cupos || 1) + "," + csvEscape(inv.slug) + "\n";
+      csv += csvEscape(inv.nombre) + "," + (inv.adicionales || 0) + "," + csvEscape(inv.slug) + "\n";
     }
 
     var encoded = Utilities.base64Encode(csv);

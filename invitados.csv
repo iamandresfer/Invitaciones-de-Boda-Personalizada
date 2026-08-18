@@ -1,8 +1,8 @@
-nombre,cupos,slug
-Andr?s Alde?n,2,andres-aldean
-Luis Alde?n,3,luis-aldean
-Mar?a P?rez,1,maria-perez
-Carlos L?pez,4,carlos-lopez
-Ana Garc?a,2,ana-garcia
-Victor Parco,1,victor-parco
-nuevo invitado prueba,1,nuevo-invitado-prueba
+nombre,adicionales,slug
+Andrés Aldeán,1,andres-aldean
+Luis Aldeán,2,luis-aldean
+María Pérez,0,maria-perez
+Carlos López,3,carlos-lopez
+Ana García,1,ana-garcia
+Victor Parco,0,victor-parco
+nuevo invitado prueba,0,nuevo-invitado-prueba

@@ -42,12 +42,12 @@ function parseCSV(text) {
   return rows;
 }
 
-function cuposOptions(cupos) {
-  var html = "";
-  var n = parseInt(cupos);
+function adicionalesOptions(adicionales) {
+  var html = '<option value="0">Solo yo</option>\n';
+  var n = parseInt(adicionales) || 0;
   for (var i = 1; i <= n; i++) {
     var selected = i === n ? ' selected' : "";
-    html += '<option value="' + i + '"' + selected + '>' + i + " " + (i === 1 ? "cupo" : "cupos") + "</option>\n";
+    html += '<option value="' + i + '"' + selected + '>' + i + " " + (i === 1 ? "acompañante" : "acompañantes") + "</option>\n";
   }
   return html;
 }
@@ -67,7 +67,7 @@ function main() {
 
   guests.forEach(function(guest) {
     var nombre = guest.nombre;
-    var cupos = guest.cupos;
+    var adicionales = guest.adicionales;
     var slug = guest.slug;
     if (!slug) { console.log("  SKIP sin slug: " + nombre); return; }
 
@@ -81,9 +81,9 @@ function main() {
 
     var html = template
       .replace(/\{\{NOMBRE\}\}/g, nombre)
-      .replace(/\{\{CUPOS\}\}/g, cupos)
+      .replace(/\{\{ADICIONALES\}\}/g, adicionales)
       .replace(/\{\{SLUG\}\}/g, slug)
-      .replace(/\{\{CUPOS_OPTIONS\}\}/g, cuposOptions(cupos))
+      .replace(/\{\{ADICIONALES_OPTIONS\}\}/g, adicionalesOptions(adicionales))
       .replace(/\{\{FECHA_ISO\}\}/g, EVENTO.fecha)
       .replace(/\{\{HORA_DISPLAY\}\}/g, horaDisplay)
       .replace(/\{\{HORA\}\}/g, EVENTO.hora)
@@ -107,10 +107,10 @@ function main() {
 
     if (exists) {
       updated++;
-      console.log("  UPD " + slug + ".html (" + nombre + ", " + cupos + " cupos)");
+      console.log("  UPD " + slug + ".html (" + nombre + ", " + adicionales + " adicionales)");
     } else {
       created++;
-      console.log("  NEW " + slug + ".html (" + nombre + ", " + cupos + " cupos)");
+      console.log("  NEW " + slug + ".html (" + nombre + ", " + adicionales + " adicionales)");
     }
   });
 
