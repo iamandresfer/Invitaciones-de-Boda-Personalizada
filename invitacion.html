@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gloria & Juan te invitan</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Great+Vibes&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="src/styles.css">
+
+  <link rel="icon" type="image/png" href="src/assets/images/favicon.png">
+  <style>
+    #rsvp-debug-log {
+      position: fixed; bottom: 0; left: 0; right: 0; max-height: 180px;
+      overflow-y: auto; background: rgba(0,0,0,0.88); color: #0f0;
+      font-family: 'Courier New', monospace; font-size: 0.7rem; padding: 8px 12px;
+      z-index: 9999; line-height: 1.5;
+    }
+    #rsvp-debug-log:empty { display: none; }
+    #rsvp-debug-log div { border-bottom: 1px solid rgba(255,255,255,0.08); padding: 1px 0; }
+    #rsvp-debug-log div:last-child { color: #ff0; }
+    .loading-screen {
+      position: fixed; inset: 0; background: #FAFAF8;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; color: #6B6B6B;
+    }
+    .loading-screen.hidden { display: none; }
+    .error-screen {
+      position: fixed; inset: 0; background: #FAFAF8;
+      display: flex; align-items: center; justify-content: center; flex-direction: column;
+      font-family: 'Inter', sans-serif; color: #2C2C2C; text-align: center; padding: 24px;
+    }
+    .error-screen.hidden { display: none; }
+    .error-screen h2 { font-family: 'Cormorant Garamond', serif; font-weight: 400; margin-bottom: 12px; }
+    .error-screen p { color: #6B6B6B; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+
+  <div id="loading-screen" class="loading-screen">Cargando invitacion...</div>
+  <div id="error-screen" class="error-screen hidden">
+    <h2>Invitacion no encontrada</h2>
+    <p>Esta invitacion no existe o no esta disponible.</p>
+  </div>
+
+  <div id="invitation-content" style="display:none;">
+    <div id="rsvp-debug-log"></div>
+
+    <!-- Hero -->
+    <section class="hero fade-in" id="hero" style="background-image: url('src/assets/images/hero.jpg');">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <p class="hero-invite">Gloria &amp; Juan te invitan</p>
+        <h1 class="hero-name" id="inv-hero-name"></h1>
+        <div class="hero-divider"></div>
+        <p class="hero-date">8 de Noviembre, 2026</p>
+      </div>
+    </section>
+
+    <!-- Countdown -->
+    <section class="section countdown-section fade-in" id="countdown">
+      <div class="container">
+        <p class="section-subtitle">Faltan</p>
+        <h2 class="section-title">8 de Noviembre, 2026</h2>
+        <div class="countdown">
+          <div class="countdown-item">
+            <span class="countdown-number" id="days">00</span>
+            <span class="countdown-label">dias</span>
+          </div>
+          <div class="countdown-item">
+            <span class="countdown-number" id="hours">00</span>
+            <span class="countdown-label">horas</span>
+          </div>
+          <div class="countdown-item">
+            <span class="countdown-number" id="minutes">00</span>
+            <span class="countdown-label">minutos</span>
+          </div>
+          <div class="countdown-item">
+            <span class="countdown-number" id="seconds">00</span>
+            <span class="countdown-label">segundos</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mensaje -->
+    <section class="section message-section fade-in" id="mensaje">
+      <div class="container">
+        <div class="divider-ornament">&#10045;</div>
+        <p class="message-text">Los novios le invitan a usted a compartir un momento especial en nuestras vidas.</p>
+        <div class="divider-ornament">&#10045;</div>
+      </div>
+    </section>
+
+    <!-- Detalles -->
+    <section class="section details-section fade-in" id="detalles">
+      <div class="container">
+        <h2 class="section-title">Detalles del Evento</h2>
+        <div class="detail-image-wrapper">
+          <img src="src/assets/images/detail.jpg" alt="Boda Gloria y Juan" class="detail-image" loading="lazy">
+        </div>
+        <div class="detail-card">
+          <h3 class="detail-heading">Ceremonia</h3>
+          <p class="detail-place">Iglesia de Santo Domingo</p>
+          <a href="https://maps.google.com/?q=Santo+Domingo+Ecuador" target="_blank" rel="noopener" class="detail-maps">Ver en Google Maps</a>
+        </div>
+        <div class="detail-divider"></div>
+        <div class="detail-card">
+          <h3 class="detail-heading">Recepcion</h3>
+          <p class="detail-place">Salon de Eventos</p>
+          <a href="https://maps.google.com/?q=Santo+Domingo+Ecuador" target="_blank" rel="noopener" class="detail-maps">Ver en Google Maps</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Vestimenta -->
+    <section class="section dress-section fade-in" id="vestimenta">
+      <div class="container">
+        <h2 class="section-title">Codigo de Vestimenta</h2>
+        <p class="dress-code">Formal / Elegante</p>
+      </div>
+    </section>
+
+    <!-- Calendario -->
+    <section class="section calendar-section fade-in" id="calendario">
+      <div class="container">
+        <h2 class="section-title">Agrega a tu Calendario</h2>
+        <div class="calendar-buttons">
+          <a href="#" class="btn btn-primary" id="btn-reservar-fecha" target="_blank" rel="noopener">Reservar fecha</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- RSVP -->
+    <section class="section rsvp-section fade-in" id="rsvp">
+      <div class="container">
+        <h2 class="section-title">Confirma tu Asistencia</h2>
+        <form id="rsvp-form" class="rsvp-form">
+          <div class="form-group">
+            <label for="rsvp-nombre">Nombre</label>
+            <input type="text" id="rsvp-nombre" name="nombre" readonly>
+          </div>
+          <div class="form-group">
+            <label for="rsvp-adicionales">Cuantos acompanantes?</label>
+            <select id="rsvp-adicionales" name="adicionales"></select>
+          </div>
+          <button type="submit" class="btn btn-primary btn-submit">Confirmar Asistencia</button>
+        </form>
+        <div id="rsvp-success" class="rsvp-message rsvp-success" style="display: none;">
+          Gracias por confirmar! Tu respuesta ha sido registrada.
+        </div>
+        <div id="rsvp-error" class="rsvp-message rsvp-error" style="display: none;"></div>
+      </div>
+    </section>
+
+    <!-- Cierre -->
+    <section class="section closing-section fade-in" id="cierre">
+      <div class="container">
+        <p class="closing-thanks">Gracias, <span id="inv-closing-name"></span></p>
+        <div class="monogram">G<span class="monogram-ampersand">&amp;</span>J</div>
+        <p class="closing-date">08 &middot; 11 &middot; 2026</p>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+      <a href="#" target="_blank" rel="noopener" class="footer-brand">
+        <img src="src/assets/images/logo-andev.svg" alt="AnDev" class="footer-logo">
+        <span>Desarrollado por <strong>AnDev</strong> &middot; Desarrollador FullStack con IA</span>
+      </a>
+    </footer>
+  </div>
+
+  <script>
+    var SUPABASE_URL = 'https://qtnfqejnmzikiobhmkmv.supabase.co';
+    var SUPABASE_ANON_KEY = 'sb_publishable_oQyw9kcdT9Y7RM0vis2dTg_J472rlDV';
+    var SUPABASE_REST = SUPABASE_URL + '/rest/v1';
+    var HEADERS = {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: 'Bearer ' + SUPABASE_ANON_KEY
+    };
+
+    var INVITADO = null;
+    var EVENTO_FECHA = "2026-11-08";
+
+    var _logs = [];
+    function log(msg) {
+      var ts = new Date().toLocaleTimeString();
+      _logs.push(ts + " " + msg);
+      console.log("[RSVP]", msg);
+      var el = document.getElementById("rsvp-debug-log");
+      if (el) {
+        el.innerHTML = _logs.map(function(l) { return "<div>" + l + "</div>"; }).join("");
+        el.scrollTop = el.scrollHeight;
+      }
+    }
+
+    function getSlug() {
+      var params = new URLSearchParams(window.location.search);
+      if (params.has("slug")) return params.get("slug");
+      var path = window.location.pathname;
+      var match = path.match(/invitacion\/(.+)\.html$/);
+      if (match) return decodeURIComponent(match[1]);
+      return null;
+    }
+
+    function buildAdicionalesOptions(max) {
+      var html = '<option value="0">Solo yo</option>';
+      var n = parseInt(max) || 0;
+      for (var i = 1; i <= n; i++) {
+        var selected = i === n ? ' selected' : '';
+        html += '<option value="' + i + '"' + selected + '>' + i + ' ' + (i === 1 ? 'acompanante' : 'acompanantes') + '</option>';
+      }
+      return html;
+    }
+
+    function initCountdown() {
+      var target = new Date(EVENTO_FECHA + "T16:00:00").getTime();
+      function tick() {
+        var diff = target - Date.now();
+        if (diff <= 0) return;
+        document.getElementById("days").textContent = Math.floor(diff / 86400000);
+        document.getElementById("hours").textContent = Math.floor((diff % 86400000) / 3600000);
+        document.getElementById("minutes").textContent = Math.floor((diff % 3600000) / 60000);
+        document.getElementById("seconds").textContent = Math.floor((diff % 60000) / 1000);
+      }
+      tick();
+      setInterval(tick, 1000);
+    }
+
+    function initFadeIn() {
+      var obs = new IntersectionObserver(function(entries) {
+        entries.forEach(function(e) { if (e.isIntersecting) { e.target.classList.add("visible"); obs.unobserve(e.target); } });
+      }, { threshold: 0.1 });
+      document.querySelectorAll(".fade-in").forEach(function(el) { obs.observe(el); });
+    }
+
+    function initCalendar() {
+      var start = "20261108T160000";
+      var end = "20261108T230000";
+      var location = "Santo Domingo, Ecuador";
+      var details = "Boda de Gloria Valarezo y Juan Navas";
+      var url = "https://calendar.google.com/calendar/render?action=TEMPLATE"
+        + "&text=Boda+Gloria+%26+Juan"
+        + "&dates=" + start + "/" + end
+        + "&location=" + encodeURIComponent(location)
+        + "&details=" + encodeURIComponent(details);
+      document.getElementById("btn-reservar-fecha").href = url;
+    }
+
+    function initRsvp() {
+      var form = document.getElementById("rsvp-form");
+      if (!form || !INVITADO) return;
+
+      document.getElementById("rsvp-nombre").value = INVITADO.nombre;
+      document.getElementById("rsvp-adicionales").innerHTML = buildAdicionalesOptions(INVITADO.adicionales);
+
+      form.addEventListener("submit", function(e) {
+        e.preventDefault();
+        if (form.dataset.submitting === "true") return;
+        form.dataset.submitting = "true";
+
+        var submitBtn = form.querySelector("button[type='submit']");
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Enviando...";
+
+        var cuposVal = parseInt(document.getElementById("rsvp-adicionales").value, 10);
+        var fechaEnvio = new Date().toISOString();
+
+        log("Enviando RSVP: " + INVITADO.nombre + " (+" + cuposVal + " acompanantes)");
+
+        fetch(SUPABASE_REST + '/invitados?slug=eq.' + encodeURIComponent(INVITADO.slug) + '&select=id', {
+          headers: HEADERS
+        })
+          .then(function(resp) {
+            if (!resp.ok) throw new Error("Error al buscar invitado: HTTP " + resp.status);
+            return resp.json();
+          })
+          .then(function(rows) {
+            if (!rows || !rows.length) throw new Error("Invitado no encontrado");
+            var invitadoId = rows[0].id;
+            log("Invitado ID: " + invitadoId);
+
+            return fetch(SUPABASE_REST + '/respuestas?invitado_id=eq.' + invitadoId, {
+              method: 'PATCH',
+              headers: Object.assign({}, HEADERS, { 'Content-Type': 'application/json', Prefer: 'return=representation' }),
+              body: JSON.stringify({
+                invitado_id: invitadoId,
+                adicionales_confirmados: cuposVal,
+                estado: cuposVal > 0 ? "Confirmado" : "No asiste",
+                fecha_envio: fechaEnvio
+              })
+            });
+          })
+          .then(function(resp) {
+            if (!resp.ok) return resp.json().then(function(d) { throw new Error(d.message || "Error HTTP " + resp.status); });
+            return resp.json();
+          })
+          .then(function(data) {
+            log("RSVP registrado!");
+            document.getElementById("rsvp-form").style.display = "none";
+            document.getElementById("rsvp-success").style.display = "block";
+          })
+          .catch(function(err) {
+            log("ERROR: " + err.message);
+            form.dataset.submitting = "false";
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Confirmar Asistencia";
+            var errEl = document.getElementById("rsvp-error");
+            errEl.textContent = "Error: " + err.message;
+            errEl.style.display = "block";
+            setTimeout(function() { errEl.style.display = "none"; }, 8000);
+          });
+      });
+    }
+
+    // === INIT ===
+    var slug = getSlug();
+    if (!slug) {
+      document.getElementById("loading-screen").classList.add("hidden");
+      document.getElementById("error-screen").classList.remove("hidden");
+    } else {
+      log("Slug: " + slug);
+      fetch(SUPABASE_REST + '/invitados?slug=eq.' + encodeURIComponent(slug) + '&select=nombre,adicionales,slug', {
+        headers: HEADERS
+      })
+        .then(function(resp) { return resp.json(); })
+        .then(function(rows) {
+          if (!rows || !rows.length) throw new Error("Invitado no encontrado");
+          INVITADO = rows[0];
+          log("Invitado: " + INVITADO.nombre + " (+" + INVITADO.adicionales + ")");
+
+          document.getElementById("inv-hero-name").textContent = INVITADO.nombre;
+          document.getElementById("inv-closing-name").textContent = INVITADO.nombre;
+          document.title = "Gloria & Juan te invitan, " + INVITADO.nombre;
+
+          document.getElementById("loading-screen").classList.add("hidden");
+          document.getElementById("invitation-content").style.display = "block";
+
+          initCountdown();
+          initFadeIn();
+          initCalendar();
+          initRsvp();
+        })
+        .catch(function(err) {
+          log("ERROR: " + err.message);
+          document.getElementById("loading-screen").classList.add("hidden");
+          document.getElementById("error-screen").classList.remove("hidden");
+        });
+    }
+  </script>
+</body>
+</html>

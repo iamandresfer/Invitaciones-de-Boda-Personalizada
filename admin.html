@@ -698,7 +698,6 @@
           + '<td><input type="number" value="' + (inv.adicionales || 0) + '" min="0" max="20" data-field="adicionales"></td>'
           + '<td><div class="actions-cell">'
           + '<button class="btn btn-sm btn-save-row" onclick="saveSingleRow(this)" title="Guardar este registro"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>'
-          + '<button class="btn btn-sm btn-generar btn-gen" onclick="generarInvitacion(this)" data-slug="' + escHtml(slug) + '" title="Generar esta invitacion">Generar</button>'
           + '<button class="btn btn-sm btn-secondary" onclick="copyLink(this)" title="Copiar link de invitacion">Copiar Link</button>'
           + '<button class="btn btn-sm btn-primary btn-ver" onclick="openLink(this)" data-slug="' + escHtml(slug) + '" title="Ver invitacion">Ver</button>'
           + '<button class="btn btn-sm btn-danger" onclick="removeRow(this)" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>'
@@ -718,7 +717,6 @@
           }
         });
       }
-      checkAllInvitations();
     }
 
     // ==========================================
@@ -806,19 +804,14 @@
     // ==========================================
     // LINKS - Invitaciones
     // ==========================================
-    async function copyLink(btn) {
+    function copyLink(btn) {
       var tr = btn.closest("tr");
       var slug = tr.getAttribute("data-slug");
       if (!slug) { showToast("Primero escribe un nombre", "error"); return; }
       var url = BASE_URL + slug + ".html";
-      try {
-        await fetch(url, { method: "HEAD" });
-        navigator.clipboard.writeText(url).then(function() {
-          showToast("Link copiado", "success");
-        });
-      } catch (e) {
-        showToast("La invitacion aun no existe. Genera primero.", "error");
-      }
+      navigator.clipboard.writeText(url).then(function() {
+        showToast("Link copiado", "success");
+      });
     }
 
     function openLink(btn) {
@@ -826,67 +819,6 @@
       var slug = btn.getAttribute("data-slug") || tr.getAttribute("data-slug");
       if (!slug) { showToast("Primero escribe un nombre", "error"); return; }
       window.open(BASE_URL + slug + ".html", "_blank");
-    }
-
-    async function generarInvitacion(btn) {
-      var slug = btn.getAttribute("data-slug");
-      if (!slug) { showToast("Primero escribe un nombre", "error"); return; }
-      var url = BASE_URL + slug + ".html";
-      btn.textContent = "Generando...";
-      btn.classList.add("btn-generating");
-      btn.disabled = true;
-      var attempts = 0;
-      var interval = setInterval(function () {
-        attempts++;
-        fetch(url, { method: "HEAD" })
-          .then(function () {
-            clearInterval(interval);
-            btn.textContent = "Generado";
-            btn.classList.remove("btn-generating", "btn-generar");
-            btn.classList.add("btn-asiste");
-            btn.disabled = true;
-            btn.onclick = null;
-            showToast("Invitacion generada", "success");
-          })
-          .catch(function () {
-            if (attempts >= 20) {
-              clearInterval(interval);
-              btn.textContent = "Generar";
-              btn.classList.remove("btn-generating");
-              btn.classList.add("btn-generar");
-              btn.disabled = false;
-              showToast("Error al generar. Intenta de nuevo.", "error");
-            }
-          });
-      }, 3000);
-    }
-
-    function checkAllInvitations() {
-      var btns = document.querySelectorAll(".btn-gen");
-      for (var i = 0; i < btns.length; i++) {
-        var btn = btns[i];
-        var slug = btn.getAttribute("data-slug");
-        if (!slug) continue;
-        checkSingleGeneration(btn, slug);
-      }
-    }
-
-    function checkSingleGeneration(btn, slug) {
-      var url = BASE_URL + slug + ".html";
-      fetch(url, { method: "HEAD" })
-        .then(function () {
-          btn.textContent = "Generado";
-          btn.classList.remove("btn-generar", "btn-generating");
-          btn.classList.add("btn-asiste");
-          btn.disabled = true;
-          btn.onclick = null;
-        })
-        .catch(function () {
-          btn.textContent = "Generar";
-          btn.classList.remove("btn-asiste", "btn-generating");
-          btn.classList.add("btn-generar");
-          btn.disabled = false;
-        });
     }
 
     // ==========================================
@@ -904,20 +836,6 @@
 
     function escHtml(str) {
       return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-    }
-
-    function gatherInvitadosFromTable() {
-      var rows = document.getElementById("invitados-body").querySelectorAll("tr");
-      var result = [];
-      for (var i = 0; i < rows.length; i++) {
-        var tr = rows[i];
-        if (tr.querySelector(".empty-msg")) continue;
-        var nombre = tr.querySelector("input[data-field='nombre']").value.trim();
-        var adicionales = parseInt(tr.querySelector("input[data-field='adicionales']").value) || 0;
-        var slug = toSlug(nombre);
-        result.push({ nombre: nombre, adicionales: adicionales, slug: slug });
-      }
-      return result;
     }
 
     // ==========================================
