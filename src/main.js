@@ -105,51 +105,13 @@ function initCalendar() {
     "&location=" + encodeURIComponent(location) +
     "&details=" + encodeURIComponent(details);
 
-  var btnGoogle = document.getElementById("btn-google-calendar");
-  if (btnGoogle) btnGoogle.href = gcalUrl;
-
-  var btnIcs = document.getElementById("btn-ics-download");
-  if (btnIcs) {
-    btnIcs.addEventListener("click", function () {
-      downloadIcs(startDate, endDate, location, details);
-    });
-  }
+  var btnCal = document.getElementById("btn-reservar-fecha");
+  if (btnCal) btnCal.href = gcalUrl;
 }
 
 function formatGcalDate(dateStr, time) {
   var parts = dateStr.split("-");
   return parts.join("") + "T" + time.replace(/:/g, "");
-}
-
-function downloadIcs(startDate, endDate, location, details) {
-  var dtStart = startDate.replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/, "$1$2$3T$4$5$6");
-  var dtEnd = endDate.replace(/(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})/, "$1$2$3T$4$5$6");
-
-  var icsContent =
-    "BEGIN:VCALENDAR\n" +
-    "VERSION:2.0\n" +
-    "PRODID:-//Boda Gloria y Juan//ES\n" +
-    "BEGIN:VEVENT\n" +
-    "DTSTART:" + dtStart + "\n" +
-    "DTEND:" + dtEnd + "\n" +
-    "SUMMARY:Boda Gloria & Juan\n" +
-    "DESCRIPTION:" + details.replace(/\n/g, "\\n") + "\n" +
-    "LOCATION:" + location.replace(/,/g, "\\,") + "\n" +
-    "END:VEVENT\n" +
-    "END:VCALENDAR";
-
-  var blob = new Blob([icsContent], {
-    type: "text/calendar;charset=utf-8",
-  });
-
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement("a");
-  a.href = url;
-  a.download = "boda-gloria-y-juan.ics";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
 }
 
 /* ---------- RSVP ---------- */
@@ -184,14 +146,12 @@ function initRsvp() {
     submitBtn.textContent = "Enviando...";
 
     var cuposVal = parseInt(document.getElementById("rsvp-cupos").value, 10);
-    var msgVal = document.getElementById("rsvp-mensaje").value;
 
     var payload = {
       action: "rsvp",
       nombre: INVITADO.nombre,
       cuposAsignados: INVITADO.cupos,
       cuposConfirmados: cuposVal,
-      mensaje: msgVal,
       slug: INVITADO.slug,
       fechaEnvio: new Date().toISOString(),
     };

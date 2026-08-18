@@ -25,6 +25,9 @@
   <meta name="twitter:title" content="Gloria & Juan te invitan, Andrés Aldeán">
   <meta name="twitter:description" content="Estas invitado a nuestra boda. 2026-11-08 - Santo Domingo, Ecuador">
   <meta name="twitter:image" content="https://gloria-y-juan.vercel.app/assets/images/og-preview.jpg">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="../src/assets/images/favicon.png">
   <style>
     #rsvp-debug-log {
       position: fixed; bottom: 0; left: 0; right: 0; max-height: 180px;
@@ -125,8 +128,7 @@
     <div class="container">
       <h2 class="section-title">Agrega a tu Calendario</h2>
       <div class="calendar-buttons">
-        <a href="#" class="btn btn-primary" id="btn-google-calendar" target="_blank" rel="noopener">Google Calendar</a>
-        <button class="btn btn-outline" id="btn-ics-download" type="button">Descargar .ics</button>
+        <a href="#" class="btn btn-primary" id="btn-reservar-fecha" target="_blank" rel="noopener">Reservar fecha</a>
       </div>
     </div>
   </section>
@@ -138,19 +140,15 @@
       <form id="rsvp-form" class="rsvp-form">
         <div class="form-group">
           <label for="rsvp-nombre">Nombre</label>
-          <input type="text" id="rsvp-nombre" name="nombre" value="Andrés Aldeán">
+          <input type="text" id="rsvp-nombre" name="nombre" value="Andrés Aldeán" readonly>
         </div>
         <div class="form-group">
-          <label for="rsvp-cupos">¿Cuántos asistirán?</label>
+          <label for="rsvp-cupos">¿Cuantos asistiran?</label>
           <select id="rsvp-cupos" name="cupos">
             <option value="1">1 cupo</option>
 <option value="2" selected>2 cupos</option>
 
           </select>
-        </div>
-        <div class="form-group">
-          <label for="rsvp-mensaje">Mensaje (opcional)</label>
-          <textarea id="rsvp-mensaje" name="mensaje" rows="3" placeholder="Déjanos un mensaje..."></textarea>
         </div>
         <button type="submit" class="btn btn-primary btn-submit">Confirmar Asistencia</button>
       </form>
@@ -169,6 +167,14 @@
       <p class="closing-date">08 · 11 · 2026</p>
     </div>
   </section>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <a href="#" target="_blank" rel="noopener" class="footer-brand">
+      <img src="../src/assets/images/logo-andev.svg" alt="AnDev" class="footer-logo">
+      <span>Desarrollado por <strong>AnDev</strong> &middot; Desarrollador FullStack con IA</span>
+    </a>
+  </footer>
 
   <!-- Script: expose globals + load main.js -->
   <script>

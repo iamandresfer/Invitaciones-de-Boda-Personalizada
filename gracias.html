@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Great+Vibes&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="src/assets/images/favicon.png">
   <style>
     :root {
       --bg: #FAFAF8;
@@ -96,8 +97,16 @@
     }
     .btn-gcal { background: var(--olive); color: #fff; }
     .btn-gcal:hover { background: #2a3028; }
-    .btn-ics { background: #fff; color: var(--olive); }
-    .btn-ics:hover { background: var(--olive); color: #fff; }
+
+    /* Footer */
+    .site-footer { text-align: center; padding: 20px 16px; margin-top: 40px; }
+    .footer-brand {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.65rem; color: var(--text-secondary); text-decoration: none;
+      opacity: 0.5; transition: opacity 0.2s;
+    }
+    .footer-brand:hover { opacity: 1; }
+    .footer-logo { height: 14px; width: auto; }
   </style>
 </head>
 <body>
@@ -115,12 +124,18 @@
     <div class="calendar-section">
       <p>No olvides agregar el evento a tu calendario:</p>
       <div class="calendar-buttons">
-        <a href="#" class="btn btn-gcal" id="btn-google-calendar" target="_blank" rel="noopener">Google Calendar</a>
-        <button class="btn btn-ics" id="btn-ics-download" type="button">Descargar .ics</button>
+        <a href="#" class="btn btn-gcal" id="btn-reservar-fecha" target="_blank" rel="noopener">Reservar fecha</a>
       </div>
     </div>
 
     <a class="back-link" href="#" id="back-link">Volver a la invitacion</a>
+
+    <footer class="site-footer">
+      <a href="#" target="_blank" rel="noopener" class="footer-brand">
+        <img src="src/assets/images/logo-andev.svg" alt="AnDev" class="footer-logo">
+        <span>Desarrollado por <strong>AnDev</strong> &middot; Desarrollador FullStack con IA</span>
+      </a>
+    </footer>
   </div>
 
   <script>
@@ -167,27 +182,7 @@
         + "&location=" + encodeURIComponent(location)
         + "&details=" + encodeURIComponent(details);
 
-      document.getElementById("btn-google-calendar").href = gcalUrl;
-
-      document.getElementById("btn-ics-download").addEventListener("click", function () {
-        var icsContent =
-          "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Boda Gloria y Juan//ES\nBEGIN:VEVENT\n"
-          + "DTSTART:" + startDate + "\nDTEND:" + endDate + "\n"
-          + "SUMMARY:Boda Gloria & Juan\n"
-          + "DESCRIPTION:" + details + "\n"
-          + "LOCATION:" + location + "\n"
-          + "END:VEVENT\nEND:VCALENDAR";
-
-        var blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
-        var url = URL.createObjectURL(blob);
-        var a = document.createElement("a");
-        a.href = url;
-        a.download = "boda-gloria-y-juan.ics";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      });
+      document.getElementById("btn-reservar-fecha").href = gcalUrl;
     })();
   </script>
 </body>

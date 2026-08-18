@@ -479,3 +479,34 @@ a {
     font-size: 2.5rem;
   }
 }
+
+/* ========================================
+   Footer
+   ======================================== */
+
+.site-footer {
+  text-align: center;
+  padding: 20px 16px;
+  margin-top: 40px;
+}
+
+.footer-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.footer-brand:hover {
+  opacity: 1;
+}
+
+.footer-logo {
+  height: 14px;
+  width: auto;
+}
