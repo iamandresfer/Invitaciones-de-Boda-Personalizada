@@ -2,7 +2,7 @@
    Wedding Invitation – Main JS
    ======================================== */
 
-var RSVP_URL = "https://script.google.com/macros/s/AKfycbwp9Jm5Ux3qO5twqV3Ka1sXvZ-TLz-rLHy2HxQstrxJHyZwMcAXyPn88I0tKQpRIqtWSQ/exec";
+var RSVP_URL = "https://script.google.com/macros/s/AKfycbwyvo-NVE4-hrTPa14FTlkrefEV2vzzFr-sFO0YByk559FaxTNDaUxKJ2oYxQT0AsLL/exec";
 
 var _logs = [];
 function log(msg) {
