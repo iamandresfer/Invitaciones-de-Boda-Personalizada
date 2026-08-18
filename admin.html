@@ -138,6 +138,9 @@
     .toast.show { opacity: 1; transform: translateY(0); }
     .toast-success { background: var(--olive); }
     .toast-error { background: var(--danger); }
+    .status-confirmado { color: #27ae60; font-weight: 500; }
+    .status-pendiente { color: #e67e22; font-weight: 500; }
+    .status-no-asiste { color: var(--danger); font-weight: 500; }
 
     @media (max-width: 600px) {
       #dashboard { padding: 16px; }
@@ -222,10 +225,11 @@
     <!-- TAB: CONFIRMACIONES -->
     <div class="tab-panel" id="panel-confirmaciones">
       <div class="stats">
-        <div class="stat-card"><div class="stat-number" id="stat-total">-</div><div class="stat-label">Total Invitados</div></div>
-        <div class="stat-card"><div class="stat-number" id="stat-confirmados">-</div><div class="stat-label">Confirmados</div></div>
+        <div class="stat-card"><div class="stat-number" id="stat-inv">-</div><div class="stat-label">Invitaciones</div></div>
+        <div class="stat-card"><div class="stat-number" id="stat-esperadas">-</div><div class="stat-label">Personas Esperadas</div></div>
+        <div class="stat-card"><div class="stat-number" id="stat-confirmadas">-</div><div class="stat-label">Confirmadas</div></div>
         <div class="stat-card"><div class="stat-number" id="stat-pendientes">-</div><div class="stat-label">Pendientes</div></div>
-        <div class="stat-card"><div class="stat-number" id="stat-cupos">-</div><div class="stat-label">Cupos Confirmados</div></div>
+        <div class="stat-card"><div class="stat-number" id="stat-no-asisten">-</div><div class="stat-label">No Asisten</div></div>
       </div>
 
       <div class="filter-bar">
@@ -234,7 +238,9 @@
           <option value="all">Todos</option>
           <option value="Confirmado">Confirmados</option>
           <option value="Pendiente">Pendientes</option>
+          <option value="No asiste">No Asisten</option>
         </select>
+        <button class="btn btn-secondary btn-sm" onclick="loadAll()">Recargar</button>
       </div>
 
       <div class="table-wrapper">
@@ -268,7 +274,14 @@
 
     var allInvitados = [];
     var allRespuestas = [];
+    var allMerged = [];
     var confirmResolve = null;
+
+    function normalize(str) {
+      return (str || "").toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+        .trim();
+    }
 
     // ==========================================
     // LOGIN
@@ -279,7 +292,7 @@
         localStorage.setItem("boda_admin_auth", "true");
         document.getElementById("login-overlay").style.display = "none";
         document.getElementById("dashboard").style.display = "block";
-        loadInvitados();
+        loadAll();
       } else {
         var err = document.getElementById("login-error");
         err.style.display = "block";
@@ -293,7 +306,7 @@
     if (localStorage.getItem("boda_admin_auth") === "true") {
       document.getElementById("login-overlay").style.display = "none";
       document.getElementById("dashboard").style.display = "block";
-      loadInvitados();
+      loadAll();
     }
 
     function logout() {
@@ -314,7 +327,6 @@
       } else {
         document.querySelectorAll(".tab")[1].classList.add("active");
         document.getElementById("panel-confirmaciones").classList.add("active");
-        loadRespuestas();
       }
     }
 
@@ -343,6 +355,106 @@
     function confirmAction(result) {
       document.getElementById("confirm-overlay").classList.remove("show");
       if (confirmResolve) { confirmResolve(result); confirmResolve = null; }
+    }
+
+    // ==========================================
+    // LOAD ALL (unified)
+    // ==========================================
+    async function loadAll() {
+      try {
+        var inv = await fetch(DATA_URL + "?action=getInvitados");
+        allInvitados = await inv.json();
+        renderInvitadosTable();
+      } catch (err) {
+        allInvitados = [];
+      }
+      try {
+        var resp = await fetch(DATA_URL + "?action=getRespuestas");
+        allRespuestas = await resp.json();
+      } catch (err) {
+        allRespuestas = [];
+      }
+      mergeData();
+      updateStats();
+      renderConfirmacionesTable(allMerged);
+    }
+
+    // ==========================================
+    // MERGE: Invitados + Respuestas -> allMerged
+    // ==========================================
+    function mergeData() {
+      var rsvpMap = {};
+      for (var i = 0; i < allRespuestas.length; i++) {
+        var key = normalize(allRespuestas[i]["Nombre"]);
+        rsvpMap[key] = allRespuestas[i];
+      }
+
+      allMerged = [];
+      for (var j = 0; j < allInvitados.length; j++) {
+        var inv = allInvitados[j];
+        var rsvp = rsvpMap[normalize(inv.nombre)];
+        allMerged.push({
+          nombre: inv.nombre || "",
+          cupos: inv.cupos || 1,
+          cuposConfirmados: rsvp ? (parseInt(rsvp["Cupos Confirmados"]) || 0) : 0,
+          estado: rsvp ? (rsvp["Estado"] || "Pendiente") : "Pendiente",
+          mensaje: rsvp ? (rsvp["Mensaje"] || "-") : "-"
+        });
+      }
+    }
+
+    // ==========================================
+    // STATS (cross-reference)
+    // ==========================================
+    function updateStats() {
+      var totalInv = allInvitados.length;
+      var totalCupos = 0;
+      for (var i = 0; i < allInvitados.length; i++) {
+        totalCupos += parseInt(allInvitados[i].cupos) || 0;
+      }
+
+      var confirmadas = 0, pendientes = 0, noAsisten = 0;
+      for (var j = 0; j < allMerged.length; j++) {
+        var m = allMerged[j];
+        if (m.estado === "Confirmado") {
+          confirmadas += m.cuposConfirmados;
+        } else if (m.estado === "No asiste") {
+          noAsisten += m.cuposConfirmados || m.cupos;
+        } else {
+          pendientes++;
+        }
+      }
+
+      document.getElementById("stat-inv").textContent = totalInv;
+      document.getElementById("stat-esperadas").textContent = totalCupos;
+      document.getElementById("stat-confirmadas").textContent = confirmadas;
+      document.getElementById("stat-pendientes").textContent = pendientes;
+      document.getElementById("stat-no-asisten").textContent = noAsisten;
+    }
+
+    // ==========================================
+    // CONFIRMACIONES TABLE (from allMerged)
+    // ==========================================
+    function renderConfirmacionesTable(data) {
+      var tbody = document.getElementById("confirmaciones-body");
+      if (!data.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">No hay invitados creados aun</td></tr>';
+        return;
+      }
+      var html = "";
+      for (var i = 0; i < data.length; i++) {
+        var m = data[i];
+        var estado = m.estado.toLowerCase();
+        var estadoClass = estado === "confirmado" ? "confirmado" : (estado === "no asiste" ? "no-asiste" : "pendiente");
+        html += "<tr>"
+          + "<td>" + escHtml(m.nombre || "-") + "</td>"
+          + "<td>" + m.cupos + "</td>"
+          + "<td>" + (m.estado === "Pendiente" ? "-" : m.cuposConfirmados) + "</td>"
+          + "<td class='status-" + estadoClass + "'>" + m.estado + "</td>"
+          + "<td>" + escHtml(m.mensaje) + "</td>"
+          + "</tr>";
+      }
+      tbody.innerHTML = html;
     }
 
     // ==========================================
@@ -433,7 +545,6 @@
       );
       if (!ok) return;
 
-      // Borrar RSVP del servidor inmediatamente
       fetch(DATA_URL, {
         method: "POST",
         mode: "no-cors",
@@ -584,9 +695,10 @@
           body: JSON.stringify({ action: "saveInvitados", invitados: valid })
         });
         allInvitados = valid.map(function(v, i) { v._row = i + 2; return v; });
-        var msg = "Guardado. Las invitaciones se generan en ~1-2 min.";
-        showToast(msg, "success");
+        showToast("Guardado. Las invitaciones se generan en ~1-2 min.", "success");
         markAllVerButtons();
+        mergeData();
+        updateStats();
       } catch (err) {
         showToast("Error al guardar", "error");
       }
@@ -599,62 +711,25 @@
     document.getElementById("inv-sort").addEventListener("change", renderInvitadosTable);
 
     // ==========================================
-    // CONFIRMACIONES (RSVP)
+    // CONFIRMACIONES FILTERS & SORT
     // ==========================================
-    async function loadRespuestas() {
-      try {
-        var resp = await fetch(DATA_URL + "?action=getRespuestas");
-        allRespuestas = await resp.json();
-        updateStats();
-        renderConfirmacionesTable(allRespuestas);
-      } catch (err) {
-        document.getElementById("confirmaciones-body").innerHTML =
-          '<tr><td colspan="5" class="empty-msg">Error al cargar datos.</td></tr>';
-      }
-    }
-
-    function updateStats() {
-      var total = allRespuestas.length;
-      var confirmados = 0, cupos = 0;
-      for (var i = 0; i < allRespuestas.length; i++) {
-        if (allRespuestas[i]["Estado"] === "Confirmado") confirmados++;
-        cupos += parseInt(allRespuestas[i]["Cupos Confirmados"]) || 0;
-      }
-      document.getElementById("stat-total").textContent = total;
-      document.getElementById("stat-confirmados").textContent = confirmados;
-      document.getElementById("stat-pendientes").textContent = total - confirmados;
-      document.getElementById("stat-cupos").textContent = cupos;
-    }
-
-    function renderConfirmacionesTable(data) {
-      var tbody = document.getElementById("confirmaciones-body");
-      if (!data.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Sin respuestas aun</td></tr>'; return; }
-      var html = "";
-      for (var i = 0; i < data.length; i++) {
-        var r = data[i];
-        var estado = (r["Estado"] || "").toLowerCase();
-        html += "<tr><td>" + escHtml(r["Nombre"] || "-") + "</td><td>" + (r["Cupos Asignados"] || "-") + "</td><td>" + (r["Cupos Confirmados"] || "-") + "</td><td class='status-" + estado + "'>" + (r["Estado"] || "-") + "</td><td>" + escHtml(r["Mensaje"] || "-") + "</td></tr>";
-      }
-      tbody.innerHTML = html;
-    }
-
     document.getElementById("search").addEventListener("input", applyFilters);
     document.getElementById("filter-status").addEventListener("change", applyFilters);
 
     function applyFilters() {
       var search = document.getElementById("search").value.toLowerCase();
       var status = document.getElementById("filter-status").value;
-      var filtered = allRespuestas;
-      if (search) filtered = filtered.filter(function(d) { return (d["Nombre"] || "").toLowerCase().indexOf(search) !== -1; });
-      if (status !== "all") filtered = filtered.filter(function(d) { return d["Estado"] === status; });
+      var filtered = allMerged;
+      if (search) filtered = filtered.filter(function(d) { return (d.nombre || "").toLowerCase().indexOf(search) !== -1; });
+      if (status !== "all") filtered = filtered.filter(function(d) { return d.estado === status; });
       renderConfirmacionesTable(filtered);
     }
 
     var sortDir = 1;
     function sortTable(col) {
-      var keys = ["Nombre", "Cupos Asignados", "Cupos Confirmados", "Estado", "Mensaje"];
+      var keys = ["nombre", "cupos", "cuposConfirmados", "estado", "mensaje"];
       var key = keys[col]; sortDir *= -1;
-      allRespuestas.sort(function(a, b) {
+      allMerged.sort(function(a, b) {
         var va = a[key] || "", vb = b[key] || "";
         if (typeof va === "number") return (va - vb) * sortDir;
         return String(va).localeCompare(String(vb)) * sortDir;

@@ -171,33 +171,123 @@ assert(result.action === "updated", "Dedup case-insensitive funciona");
 assert(result.list.length === 2, "Lista sigue teniendo 2 elementos");
 
 // =============================================
-// 5. STATS CALCULATION
+// 5. STATS CALCULATION (cross-reference)
 // =============================================
 console.log("\n=== 5. STATS ===");
 
-function calcStats(respuestas) {
-  let total = respuestas.length;
-  let confirmados = 0, cupos = 0;
-  for (let r of respuestas) {
-    if (r.Estado === "Confirmado") confirmados++;
-    cupos += parseInt(r["Cupos Confirmados"]) || 0;
-  }
-  return { total, confirmados, pendientes: total - confirmados, cupos };
+function normalize(str) {
+  return (str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
-let stats = calcStats([
-  { Nombre: "Andres", Estado: "Confirmado", "Cupos Confirmados": 2 },
-  { Nombre: "Eduardo", Estado: "Confirmado", "Cupos Confirmados": 3 },
-  { Nombre: "Ariel", Estado: "Pendiente", "Cupos Confirmados": 0 },
-]);
-assert(stats.total === 3, "Stats: total = 3");
-assert(stats.confirmados === 2, "Stats: confirmados = 2");
-assert(stats.pendientes === 1, "Stats: pendientes = 1");
-assert(stats.cupos === 5, "Stats: cupos = 2+3 = 5");
+function mergeData(invitados, respuestas) {
+  var rsvpMap = {};
+  for (var i = 0; i < respuestas.length; i++) {
+    var key = normalize(respuestas[i].Nombre);
+    rsvpMap[key] = respuestas[i];
+  }
+  var merged = [];
+  for (var j = 0; j < invitados.length; j++) {
+    var inv = invitados[j];
+    var rsvp = rsvpMap[normalize(inv.nombre)];
+    merged.push({
+      nombre: inv.nombre || "",
+      cupos: inv.cupos || 1,
+      cuposConfirmados: rsvp ? (parseInt(rsvp["Cupos Confirmados"]) || 0) : 0,
+      estado: rsvp ? (rsvp.Estado || "Pendiente") : "Pendiente",
+      mensaje: rsvp ? (rsvp.Mensaje || "-") : "-"
+    });
+  }
+  return merged;
+}
 
-stats = calcStats([]);
-assert(stats.total === 0, "Stats vacio: total = 0");
-assert(stats.confirmados === 0, "Stats vacio: confirmados = 0");
+function calcStats(invitados, respuestas) {
+  var merged = mergeData(invitados, respuestas);
+  var totalInv = invitados.length;
+  var totalCupos = 0;
+  for (var i = 0; i < invitados.length; i++) {
+    totalCupos += parseInt(invitados[i].cupos) || 0;
+  }
+  var confirmadas = 0, pendientes = 0, noAsisten = 0;
+  for (var j = 0; j < merged.length; j++) {
+    var m = merged[j];
+    if (m.estado === "Confirmado") {
+      confirmadas += m.cuposConfirmados;
+    } else if (m.estado === "No asiste") {
+      noAsisten += m.cuposConfirmados || m.cupos;
+    } else {
+      pendientes++;
+    }
+  }
+  return { totalInv, totalCupos, confirmadas, pendientes, noAsisten, merged };
+}
+
+let stats;
+
+// Case 1: 2 invitados, 1 confirmed, 1 pending
+stats = calcStats(
+  [
+    { nombre: "Andres", cupos: 2 },
+    { nombre: "Eduardo", cupos: 3 },
+  ],
+  [
+    { Nombre: "Andres", Estado: "Confirmado", "Cupos Confirmados": 2, Mensaje: "Nos vemos" },
+  ]
+);
+assert(stats.totalInv === 2, "Stats: 2 invitaciones");
+assert(stats.totalCupos === 5, "Stats: 5 personas esperadas (2+3)");
+assert(stats.confirmadas === 2, "Stats: 2 personas confirmadas (solo Andres)");
+assert(stats.pendientes === 1, "Stats: 1 pendiente (Eduardo)");
+assert(stats.noAsisten === 0, "Stats: 0 no asisten");
+assert(stats.merged.length === 2, "Stats: merged tiene 2 registros");
+assert(stats.merged[0].estado === "Confirmado", "Stats: Andres confirmado");
+assert(stats.merged[1].estado === "Pendiente", "Stats: Eduardo pendiente");
+
+// Case 2: partial confirmation - Andres confirms only 1 of 2 cupos
+stats = calcStats(
+  [
+    { nombre: "Andres", cupos: 2 },
+    { nombre: "Eduardo", cupos: 3 },
+  ],
+  [
+    { Nombre: "Andres", Estado: "Confirmado", "Cupos Confirmados": 1, Mensaje: "" },
+    { Nombre: "Eduardo", Estado: "No asiste", "Cupos Confirmados": 0, Mensaje: "No puedo" },
+  ]
+);
+assert(stats.totalCupos === 5, "Stats parcial: 5 esperadas");
+assert(stats.confirmadas === 1, "Stats parcial: Andres confirma solo 1");
+assert(stats.pendientes === 0, "Stats parcial: 0 pendientes (ambos respondieron)");
+assert(stats.noAsisten === 3, "Stats parcial: Eduardo no asiste, 3 cupos");
+
+// Case 3: deleted guest removes cupos from count
+stats = calcStats(
+  [
+    { nombre: "Andres", cupos: 2 },
+  ],
+  [
+    { Nombre: "Andres", Estado: "Confirmado", "Cupos Confirmados": 2 },
+    { Nombre: "Eduardo", Estado: "Confirmado", "Cupos Confirmados": 3 },
+  ]
+);
+assert(stats.totalInv === 1, "Stats delete: 1 invitacion (Eduardo borrado)");
+assert(stats.totalCupos === 2, "Stats delete: solo 2 esperadas");
+assert(stats.confirmadas === 2, "Stats delete: 2 confirmadas (solo Andres)");
+assert(stats.merged.length === 1, "Stats delete: merged solo tiene Andres");
+assert(stats.merged[0].nombre === "Andres", "Stats delete: Andres en merged");
+
+// Case 4: empty
+stats = calcStats([], []);
+assert(stats.totalInv === 0, "Stats vacio: 0 invitaciones");
+assert(stats.totalCupos === 0, "Stats vacio: 0 esperadas");
+assert(stats.confirmadas === 0, "Stats vacio: 0 confirmadas");
+assert(stats.pendientes === 0, "Stats vacio: 0 pendientes");
+
+// Case 5: RSVP name normalization (accents)
+stats = calcStats(
+  [{ nombre: "Andrés Aldeán", cupos: 2 }],
+  [{ Nombre: "Andres Aldean", Estado: "Confirmado", "Cupos Confirmados": 2 }]
+);
+assert(stats.confirmadas === 2, "Stats normalize: nombre con/.sin tildes matchea");
+assert(stats.merged[0].estado === "Confirmado", "Stats normalize: estado correcto");
 
 // =============================================
 // 6. CLEAN RSVPS LOGIC (simulated)
