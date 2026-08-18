@@ -225,6 +225,7 @@
         <div class="stat-card"><div class="stat-number" id="stat-confirmados">-</div><div class="stat-label">Confirmados</div></div>
         <div class="stat-card"><div class="stat-number" id="stat-pendientes">-</div><div class="stat-label">Pendientes</div></div>
         <div class="stat-card"><div class="stat-number" id="stat-cupos">-</div><div class="stat-label">Cupos Confirmados</div></div>
+        <div class="stat-card"><div class="stat-number" id="stat-eliminados" style="color:var(--danger)">-</div><div class="stat-label">Eliminados</div></div>
       </div>
 
       <div class="filter-bar">
@@ -603,17 +604,28 @@
       }
     }
 
+    function isGuestActive(nombre) {
+      var searchName = nombre.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      for (var i = 0; i < allInvitados.length; i++) {
+        var invName = (allInvitados[i].nombre || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        if (invName === searchName) return true;
+      }
+      return false;
+    }
+
     function updateStats() {
       var total = allRespuestas.length;
-      var confirmados = 0, cupos = 0;
+      var confirmados = 0, cupos = 0, eliminados = 0;
       for (var i = 0; i < allRespuestas.length; i++) {
         if (allRespuestas[i]["Estado"] === "Confirmado") confirmados++;
         cupos += parseInt(allRespuestas[i]["Cupos Confirmados"]) || 0;
+        if (!isGuestActive(allRespuestas[i]["Nombre"])) eliminados++;
       }
       document.getElementById("stat-total").textContent = total;
       document.getElementById("stat-confirmados").textContent = confirmados;
       document.getElementById("stat-pendientes").textContent = total - confirmados;
       document.getElementById("stat-cupos").textContent = cupos;
+      document.getElementById("stat-eliminados").textContent = eliminados;
     }
 
     function renderConfirmacionesTable(data) {
@@ -623,7 +635,10 @@
       for (var i = 0; i < data.length; i++) {
         var r = data[i];
         var estado = (r["Estado"] || "").toLowerCase();
-        html += "<tr><td>" + escHtml(r["Nombre"] || "-") + "</td><td>" + (r["Cupos Asignados"] || "-") + "</td><td>" + (r["Cupos Confirmados"] || "-") + "</td><td class='status-" + estado + "'>" + (r["Estado"] || "-") + "</td><td>" + escHtml(r["Mensaje"] || "-") + "</td></tr>";
+        var active = isGuestActive(r["Nombre"]);
+        var rowStyle = active ? "" : " style='opacity:0.5;'";
+        var badge = active ? "" : " <span style='background:var(--danger);color:#fff;font-size:0.65rem;padding:2px 6px;border-radius:2px;margin-left:6px;'>Eliminado</span>";
+        html += "<tr" + rowStyle + "><td>" + escHtml(r["Nombre"] || "-") + badge + "</td><td>" + (r["Cupos Asignados"] || "-") + "</td><td>" + (r["Cupos Confirmados"] || "-") + "</td><td class='status-" + estado + "'>" + (r["Estado"] || "-") + "</td><td>" + escHtml(r["Mensaje"] || "-") + "</td></tr>";
       }
       tbody.innerHTML = html;
     }
