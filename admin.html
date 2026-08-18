@@ -697,7 +697,6 @@
           + '<td><input type="text" value="' + escHtml(inv.nombre || "") + '" data-field="nombre"></td>'
           + '<td><input type="number" value="' + (inv.adicionales || 0) + '" min="0" max="20" data-field="adicionales"></td>'
           + '<td><div class="actions-cell">'
-          + '<button class="btn btn-sm btn-save-row" onclick="saveSingleRow(this)" title="Guardar este registro"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>'
           + '<button class="btn btn-sm btn-secondary" onclick="copyLink(this)" title="Copiar link de invitacion">Copiar Link</button>'
           + '<button class="btn btn-sm btn-primary btn-ver" onclick="openLink(this)" data-slug="' + escHtml(slug) + '" title="Ver invitacion">Ver</button>'
           + '<button class="btn btn-sm btn-danger" onclick="removeRow(this)" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>'
@@ -716,12 +715,37 @@
             btns[k].setAttribute("data-slug", newSlug);
           }
         });
+        nombreInputs[j].addEventListener("blur", function() {
+          autoSaveRow(this.closest("tr"));
+        });
+      }
+      var adicInputs = tbody.querySelectorAll("input[data-field='adicionales']");
+      for (var j2 = 0; j2 < adicInputs.length; j2++) {
+        adicInputs[j2].addEventListener("blur", function() {
+          autoSaveRow(this.closest("tr"));
+        });
       }
     }
 
     // ==========================================
     // CRUD INVITADOS
     // ==========================================
+    async function autoSaveRow(tr) {
+      var id = tr.getAttribute("data-id");
+      var nombre = tr.querySelector("input[data-field='nombre']").value.trim();
+      var adicionales = parseInt(tr.querySelector("input[data-field='adicionales']").value) || 0;
+      if (!nombre || !id) return;
+      try {
+        await fetch(SUPABASE_REST + '/invitados?id=eq.' + id, {
+          method: 'PATCH',
+          headers: SB_HEADERS,
+          body: JSON.stringify({ nombre: nombre, adicionales: adicionales })
+        });
+        var idx = allInvitados.findIndex(function(i) { return i.id === id; });
+        if (idx >= 0) { allInvitados[idx].nombre = nombre; allInvitados[idx].adicionales = adicionales; }
+      } catch (err) {}
+    }
+
     async function addInvitado() {
       try {
         var res = await fetch(SUPABASE_REST + '/invitados', {
@@ -770,35 +794,6 @@
       } catch (err) {
         showToast("Error: " + err.message, "error");
       }
-    }
-
-    async function saveSingleRow(btn) {
-      var tr = btn.closest("tr");
-      var id = tr.getAttribute("data-id");
-      var nombre = tr.querySelector("input[data-field='nombre']").value.trim();
-      var adicionales = parseInt(tr.querySelector("input[data-field='adicionales']").value) || 0;
-      if (!nombre) { showToast("Escribe un nombre primero", "error"); return; }
-      btn.classList.add("saved");
-      btn.disabled = true;
-      try {
-        await fetch(SUPABASE_REST + '/invitados?id=eq.' + id, {
-          method: 'PATCH',
-          headers: SB_HEADERS,
-          body: JSON.stringify({ nombre: nombre, adicionales: adicionales })
-        });
-        var idx = allInvitados.findIndex(function(i) { return i.id === id; });
-        if (idx >= 0) {
-          allInvitados[idx].nombre = nombre;
-          allInvitados[idx].adicionales = adicionales;
-        }
-        showToast("'" + nombre + "' guardado", "success");
-      } catch (err) {
-        showToast("Error al guardar: " + err.message, "error");
-      }
-      setTimeout(function() {
-        btn.classList.remove("saved");
-        btn.disabled = false;
-      }, 1500);
     }
 
     // ==========================================

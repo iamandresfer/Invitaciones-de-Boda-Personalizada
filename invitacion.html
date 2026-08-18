@@ -284,9 +284,9 @@
             var invitadoId = rows[0].id;
             log("Invitado ID: " + invitadoId);
 
-            return fetch(SUPABASE_REST + '/respuestas?invitado_id=eq.' + invitadoId, {
-              method: 'PATCH',
-              headers: Object.assign({}, HEADERS, { 'Content-Type': 'application/json', Prefer: 'return=representation' }),
+            return fetch(SUPABASE_REST + '/respuestas', {
+              method: 'POST',
+              headers: Object.assign({}, HEADERS, { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=representation' }),
               body: JSON.stringify({
                 invitado_id: invitadoId,
                 adicionales_confirmados: cuposVal,

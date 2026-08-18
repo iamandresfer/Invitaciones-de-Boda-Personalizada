@@ -181,9 +181,9 @@ function initRsvp() {
         };
         log("Payload: " + JSON.stringify(payload));
 
-        return fetch(SUPABASE_REST + '/respuestas?invitado_id=eq.' + invitadoId, {
-          method: 'PATCH',
-          headers: RSVP_HEADERS,
+        return fetch(SUPABASE_REST + '/respuestas', {
+          method: 'POST',
+          headers: Object.assign({}, RSVP_HEADERS, { Prefer: 'resolution=merge-duplicates,return=representation' }),
           body: JSON.stringify(payload)
         });
       })
