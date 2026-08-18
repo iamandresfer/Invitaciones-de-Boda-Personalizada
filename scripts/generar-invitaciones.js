@@ -94,8 +94,8 @@ function main() {
       .replace(/\{\{OG_URL\}\}/g, EVENTO.urlBase + "/invitacion/" + slug + ".html");
 
     html = html
-      .replace(/href="styles\.css"/g, 'href="../src/styles.css"')
-      .replace(/src="main\.js"/g, 'src="../src/main.js"');
+      .replace(/href="styles\.css(\?[^"]*)?"/g, 'href="../src/styles.css$1"')
+      .replace(/src="main\.js(\?[^"]*)?"/g, 'src="../src/main.js$1"');
 
     var outPath = path.join(OUTPUT_DIR, slug + ".html");
     fs.writeFileSync(outPath, html, "utf-8");
