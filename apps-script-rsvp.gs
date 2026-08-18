@@ -68,7 +68,13 @@ function doPost(e) {
       return jsonResponse({ error: "No HTTP request data. Deploy as web app and access from browser." });
     }
     Logger.log("doPost received: " + e.postData.contents);
-    var data = JSON.parse(e.postData.contents);
+    var data;
+    try {
+      data = JSON.parse(e.postData.contents);
+    } catch (parseErr) {
+      Logger.log("JSON parse error: " + parseErr.toString() + " | raw: " + e.postData.contents);
+      return errorResponse("Invalid JSON", parseErr.toString());
+    }
     var action = data.action || "rsvp";
 
     if (action === "rsvp") return handleRsvp(data);
@@ -176,6 +182,11 @@ function handleDeleteRsvp(data) {
 }
 
 function handleUpdateEstado(data) {
+  if (!data || !data.nombre) {
+    Logger.log("handleUpdateEstado: datos invalidos recibidos: " + JSON.stringify(data));
+    return jsonResponse({ success: false, error: "Falta nombre en la peticion" });
+  }
+
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Respuestas");
   if (!sheet) {
     sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet("Respuestas");
