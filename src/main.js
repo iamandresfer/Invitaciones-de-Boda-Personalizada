@@ -2,7 +2,15 @@
    Wedding Invitation – Main JS
    ======================================== */
 
-var RSVP_URL = "https://script.google.com/macros/s/AKfycbzN51e8vD_TvOsesZYJRr7EPawt9Q_TP7ksfjZaFG_wIeZMu6helJ4Gdicjy6iUJGYp/exec";
+var SUPABASE_URL = 'https://qtnfqejnmzikiobhmkmv.supabase.co';
+var SUPABASE_ANON_KEY = 'sb_publishable_oQyw9kcdT9Y7RM0vis2dTg_J472rlDV';
+var SUPABASE_REST = SUPABASE_URL + '/rest/v1';
+var RSVP_HEADERS = {
+  apikey: SUPABASE_ANON_KEY,
+  Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
+  'Content-Type': 'application/json',
+  Prefer: 'return=representation'
+};
 
 var _logs = [];
 function log(msg) {
@@ -146,45 +154,51 @@ function initRsvp() {
     submitBtn.textContent = "Enviando...";
 
     var cuposVal = parseInt(document.getElementById("rsvp-adicionales").value, 10);
+    var fechaEnvio = new Date().toISOString();
 
-    var payload = {
-      action: "rsvp",
-      nombre: INVITADO.nombre,
-      adicionalesAsignados: INVITADO.adicionales,
-      adicionalesConfirmados: cuposVal,
-      slug: INVITADO.slug,
-      fechaEnvio: new Date().toISOString(),
-    };
+    log("Enviando RSVP: " + INVITADO.nombre + " (+" + cuposVal + " accompanyantes)");
+    log("Supabase: " + SUPABASE_REST);
 
-    log("Enviando RSVP: " + INVITADO.nombre + " (+" + cuposVal + " acompañantes)");
-    log("URL: " + RSVP_URL);
-    log("Payload: " + JSON.stringify(payload));
-
-    fetch(RSVP_URL, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "text/plain" },
-      body: JSON.stringify(payload),
+    // Step 1: Get invitado ID by slug
+    fetch(SUPABASE_REST + '/invitados?slug=eq.' + INVITADO.slug + '&select=id', {
+      headers: RSVP_HEADERS
     })
-      .then(function (resp) {
-        log("Response HTTP " + resp.status + " | type: " + resp.type);
-        if (resp.type === "opaque") {
-          log("Respuesta opaca (CORS) - continuando de todas formas");
-          return { success: true };
-        }
+      .then(function(resp) {
+        if (!resp.ok) throw new Error("Error al buscar invitado: HTTP " + resp.status);
+        return resp.json();
+      })
+      .then(function(rows) {
+        if (!rows || !rows.length) throw new Error("Invitado no encontrado en la base de datos");
+        var invitadoId = rows[0].id;
+        log("Invitado ID: " + invitadoId);
+
+        // Step 2: Upsert RSVP response
+        var payload = {
+          invitado_id: invitadoId,
+          adicionales_confirmados: cuposVal,
+          estado: cuposVal > 0 ? "Confirmado" : "No asiste",
+          fecha_envio: fechaEnvio
+        };
+        log("Payload: " + JSON.stringify(payload));
+
+        return fetch(SUPABASE_REST + '/respuestas?invitado_id=eq.' + invitadoId, {
+          method: 'PATCH',
+          headers: RSVP_HEADERS,
+          body: JSON.stringify(payload)
+        });
+      })
+      .then(function(resp) {
+        log("Response HTTP " + resp.status);
         if (!resp.ok) throw new Error("HTTP " + resp.status);
         return resp.json();
       })
-      .then(function (data) {
+      .then(function(data) {
         log("Respuesta: " + JSON.stringify(data));
-        if (data && data.error) {
-          throw new Error(data.error + (data.details ? " - " + data.details : ""));
-        }
         log("RSVP exitoso! Guardando en localStorage...");
         localStorage.setItem(getStorageKey(), JSON.stringify({
           nombre: INVITADO.nombre,
-          adicionales: payload.adicionalesConfirmados,
-          fecha: payload.fechaEnvio,
+          adicionales: cuposVal,
+          fecha: fechaEnvio,
         }));
         log("Redirigiendo a gracias.html...");
         window.location.href = "../gracias.html";

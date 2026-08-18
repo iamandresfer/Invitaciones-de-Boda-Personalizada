@@ -327,14 +327,14 @@
         <h3 class="section-subtitle">Confirmados</h3>
         <div class="table-wrapper">
           <table>
-<thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Adicionales</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Adicionales</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
             <tbody id="confirmaciones-confirmados">
             </tbody>
           </table>
@@ -355,16 +355,24 @@
   </footer>
 
   <script>
-    // ==========================================
-    // CONFIG v2
-    // ==========================================
-    var DATA_URL = "https://script.google.com/macros/s/AKfycbzN51e8vD_TvOsesZYJRr7EPawt9Q_TP7ksfjZaFG_wIeZMu6helJ4Gdicjy6iUJGYp/exec";
-    var PASSWORD = "gloria2026";
+    var SUPABASE_URL = 'https://qtnfqejnmzikiobhmkmv.supabase.co';
+    var SUPABASE_ANON_KEY = 'sb_publishable_oQyw9kcdT9Y7RM0vis2dTg_J472rlDV';
+    var SUPABASE_REST = SUPABASE_URL + '/rest/v1';
+    var SB_HEADERS = {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation'
+    };
+    var BASE_URL = "https://invitaciones-de-boda-personalizada.vercel.app/invitacion/";
 
     var allInvitados = [];
     var allRespuestas = [];
     var allMerged = [];
     var confirmResolve = null;
+    var isAdminAuthed = false;
+    var _fabSpinning = false;
+    var sortDir = 1;
 
     function normalize(str) {
       return (str || "").toLowerCase()
@@ -375,24 +383,41 @@
     // ==========================================
     // LOGIN
     // ==========================================
-    function checkPassword() {
+    async function checkPassword() {
       var val = document.getElementById("password-input").value.trim();
-      if (val === PASSWORD) {
-        localStorage.setItem("boda_admin_auth", "true");
-        document.getElementById("login-overlay").style.display = "none";
-        document.getElementById("dashboard").style.display = "block";
-        loadAll();
-      } else {
-        var err = document.getElementById("login-error");
-        err.style.display = "block";
-        setTimeout(function() { err.style.display = "none"; }, 2000);
+      var btn = document.querySelector('.login-box button');
+      btn.disabled = true;
+      btn.textContent = 'Verificando...';
+      try {
+        var res = await fetch(SUPABASE_REST + '/admin_credentials?id=eq.1&select=password_hash', {
+          headers: SB_HEADERS
+        });
+        var data = await res.json();
+        if (data.length > 0 && data[0].password_hash === val) {
+          isAdminAuthed = true;
+          localStorage.setItem("boda_admin_auth", "true");
+          document.getElementById("login-overlay").style.display = "none";
+          document.getElementById("dashboard").style.display = "block";
+          loadAll();
+        } else {
+          var err = document.getElementById("login-error");
+          err.style.display = "block";
+          setTimeout(function() { err.style.display = "none"; }, 2000);
+        }
+      } catch (e) {
+        showToast('Error de conexion', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Entrar';
       }
     }
+
     document.getElementById("password-input").addEventListener("keypress", function(e) {
       if (e.key === "Enter") checkPassword();
     });
 
     if (localStorage.getItem("boda_admin_auth") === "true") {
+      isAdminAuthed = true;
       document.getElementById("login-overlay").style.display = "none";
       document.getElementById("dashboard").style.display = "block";
       loadAll();
@@ -400,6 +425,7 @@
 
     function logout() {
       localStorage.removeItem("boda_admin_auth");
+      isAdminAuthed = false;
       location.reload();
     }
 
@@ -409,7 +435,6 @@
     function switchTab(tab) {
       document.querySelectorAll(".tab").forEach(function(t) { t.classList.remove("active"); });
       document.querySelectorAll(".tab-panel").forEach(function(p) { p.classList.remove("active"); });
-
       if (tab === "invitados") {
         document.querySelectorAll(".tab")[0].classList.add("active");
         document.getElementById("panel-invitados").classList.add("active");
@@ -450,52 +475,65 @@
     }
 
     // ==========================================
-    // LOAD ALL (unified)
+    // LOAD ALL
     // ==========================================
     async function loadAll() {
-      try {
-        var inv = await fetch(DATA_URL + "?action=getInvitados");
-        allInvitados = await inv.json();
-        renderInvitadosTable();
-      } catch (err) {
-        allInvitados = [];
-      }
-      try {
-        var resp = await fetch(DATA_URL + "?action=getRespuestas");
-        allRespuestas = await resp.json();
-      } catch (err) {
-        allRespuestas = [];
-      }
+      await Promise.all([loadInvitados(), loadRespuestas()]);
       mergeData();
       updateStats();
       renderConfirmacionesTable(allMerged);
     }
 
+    async function loadInvitados() {
+      try {
+        var res = await fetch(SUPABASE_REST + '/invitados?select=id,nombre,adicionales,slug,created_at&order=created_at.desc', {
+          headers: SB_HEADERS
+        });
+        allInvitados = await res.json();
+        renderInvitadosTable();
+      } catch (err) {
+        allInvitados = [];
+        document.getElementById("invitados-body").innerHTML =
+          '<tr><td colspan="4" class="empty-msg"><p>Error al cargar invitados.</p></td></tr>';
+      }
+    }
+
+    async function loadRespuestas() {
+      try {
+        var res = await fetch(SUPABASE_REST + '/respuestas?select=*', {
+          headers: SB_HEADERS
+        });
+        allRespuestas = await res.json();
+      } catch (err) {
+        allRespuestas = [];
+      }
+    }
+
     // ==========================================
-    // MERGE: Invitados + Respuestas -> allMerged
+    // MERGE
     // ==========================================
     function mergeData() {
       var rsvpMap = {};
       for (var i = 0; i < allRespuestas.length; i++) {
-        var key = normalize(allRespuestas[i]["Nombre"]);
+        var key = normalize(allRespuestas[i].nombre);
         rsvpMap[key] = allRespuestas[i];
       }
-
       allMerged = [];
       for (var j = 0; j < allInvitados.length; j++) {
         var inv = allInvitados[j];
         var rsvp = rsvpMap[normalize(inv.nombre)];
         allMerged.push({
+          id: inv.id,
           nombre: inv.nombre || "",
           adicionales: parseInt(inv.adicionales) || 0,
-          adicionalesConfirmados: rsvp ? (parseInt(rsvp["Adicionales Confirmados"]) || 0) : 0,
-          estado: rsvp ? (rsvp["Estado"] || "Pendiente") : "Pendiente"
+          adicionalesConfirmados: rsvp ? (parseInt(rsvp.adicionales_confirmados) || 0) : 0,
+          estado: rsvp ? (rsvp.estado || "Pendiente") : "Pendiente"
         });
       }
     }
 
     // ==========================================
-    // STATS (cross-reference)
+    // STATS
     // ==========================================
     function updateStats() {
       var totalInv = allInvitados.length;
@@ -503,7 +541,6 @@
       for (var i = 0; i < allInvitados.length; i++) {
         totalPersonas += 1 + (parseInt(allInvitados[i].adicionales) || 0);
       }
-
       var confirmadas = 0, pendientes = 0, noAsistenPersonas = 0;
       for (var j = 0; j < allMerged.length; j++) {
         var m = allMerged[j];
@@ -515,9 +552,7 @@
           pendientes++;
         }
       }
-
       var esperadas = totalPersonas - noAsistenPersonas;
-
       document.getElementById("stat-inv").textContent = totalInv;
       document.getElementById("stat-esperadas").textContent = esperadas;
       document.getElementById("stat-confirmadas").textContent = confirmadas;
@@ -526,13 +561,12 @@
     }
 
     // ==========================================
-    // CONFIRMACIONES TABLE (from allMerged)
+    // CONFIRMACIONES TABLE
     // ==========================================
     function renderConfirmacionesTable(data) {
       var tbodyP = document.getElementById("confirmaciones-pendientes");
       var tbodyC = document.getElementById("confirmaciones-confirmados");
       var sectionC = document.getElementById("confirmadas-section");
-
       var pendientes = [];
       var confirmados = [];
       for (var i = 0; i < data.length; i++) {
@@ -542,8 +576,6 @@
           pendientes.push(data[i]);
         }
       }
-
-      // Pendientes / No asisten
       if (!pendientes.length) {
         tbodyP.innerHTML = '<tr><td colspan="5" class="empty-msg">' + (data.length ? 'Todos confirmaron!' : 'No hay invitados creados aun') + '</td></tr>';
       } else {
@@ -553,8 +585,6 @@
         }
         tbodyP.innerHTML = html;
       }
-
-      // Confirmados
       if (!confirmados.length) {
         sectionC.style.display = "none";
         tbodyC.innerHTML = "";
@@ -574,7 +604,6 @@
       var escName = escHtml(m.nombre).replace(/'/g, "\\'");
       var btnAsisteDisabled = m.estado === "Confirmado" ? " disabled" : "";
       var btnNoDisabled = m.estado === "No asiste" ? " disabled" : "";
-
       return "<tr>"
         + "<td>" + escHtml(m.nombre || "-") + "</td>"
         + "<td>" + (1 + (m.adicionales || 0)) + "</td>"
@@ -587,7 +616,7 @@
     }
 
     // ==========================================
-    // TOGGLE ESTADO (confirmar / no asiste / reactivar)
+    // TOGGLE ESTADO
     // ==========================================
     async function toggleEstado(nombre, nuevoEstado) {
       var ok = await showConfirm(
@@ -597,75 +626,73 @@
         "btn-confirm"
       );
       if (!ok) return;
-
-      fetch(DATA_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        body: JSON.stringify({ action: "updateEstado", nombre: nombre, estado: nuevoEstado })
-      })
-        .then(function(resp) { return resp.json(); })
-        .then(function(data) {
-          if (data.success) {
-            showToast("Estado actualizado", "success");
-            loadAll();
-          } else {
-            showToast("Error: " + (data.error || "desconocido"), "error");
-          }
-        })
-        .catch(function(err) {
-          showToast("Error de red: " + err.message, "error");
-        });
-    }
-
-    // ==========================================
-    // INVITADOS
-    // ==========================================
-    async function loadInvitados() {
       try {
-        var resp = await fetch(DATA_URL + "?action=getInvitados");
-        allInvitados = await resp.json();
-        renderInvitadosTable();
+        var invitado = allInvitados.find(function(i) { return normalize(i.nombre) === normalize(nombre); });
+        var adicionalesAsignados = invitado ? (parseInt(invitado.adicionales) || 0) : 0;
+        var adicionalesConfirmados = (nuevoEstado === 'Confirmado') ? adicionalesAsignados : 0;
+        var respuestas = await fetch(SUPABASE_REST + '/respuestas?nombre=eq.' + encodeURIComponent(nombre), {
+          headers: SB_HEADERS
+        }).then(function(r) { return r.json(); });
+        var payload = {
+          nombre: nombre,
+          adicionales_asignados: adicionalesAsignados,
+          adicionales_confirmados: adicionalesConfirmados,
+          estado: nuevoEstado,
+          invitado_id: invitado ? invitado.id : null
+        };
+        if (respuestas.length > 0) {
+          await fetch(SUPABASE_REST + '/respuestas?nombre=eq.' + encodeURIComponent(nombre), {
+            method: 'PATCH',
+            headers: SB_HEADERS,
+            body: JSON.stringify(payload)
+          });
+        } else {
+          await fetch(SUPABASE_REST + '/respuestas', {
+            method: 'POST',
+            headers: SB_HEADERS,
+            body: JSON.stringify(payload)
+          });
+        }
+        showToast("Estado actualizado", "success");
+        loadAll();
       } catch (err) {
-        document.getElementById("invitados-body").innerHTML =
-          '<tr><td colspan="4" class="empty-msg"><p>Error al cargar. Verifica la URL del endpoint.</p></td></tr>';
+        showToast("Error: " + err.message, "error");
       }
     }
 
+    // ==========================================
+    // INVITADOS TABLE
+    // ==========================================
     function getFilteredInvitados() {
       var search = (document.getElementById("inv-search").value || "").toLowerCase();
       var sort = document.getElementById("inv-sort").value;
       var list = allInvitados.slice();
-
       if (search) {
         list = list.filter(function(inv) {
           return (inv.nombre || "").toLowerCase().indexOf(search) !== -1;
         });
       }
-
       if (sort === "name-asc") {
         list.sort(function(a, b) { return (a.nombre || "").localeCompare(b.nombre || ""); });
       } else if (sort === "name-desc") {
         list.sort(function(a, b) { return (b.nombre || "").localeCompare(a.nombre || ""); });
       }
-
       return list;
     }
 
     function renderInvitadosTable() {
       var tbody = document.getElementById("invitados-body");
       var list = getFilteredInvitados();
-
       if (!list.length) {
         var msg = allInvitados.length ? "No se encontraron invitados con ese filtro." : "No hay invitados. Haz clic en '+ Agregar Invitado' para comenzar.";
         tbody.innerHTML = '<tr><td colspan="4" class="empty-msg"><p>' + msg + '</p></td></tr>';
         return;
       }
-
       var html = "";
       for (var i = 0; i < list.length; i++) {
         var inv = list[i];
         var slug = inv.slug || toSlug(inv.nombre || "");
-        html += '<tr data-slug="' + escHtml(slug) + '">'
+        html += '<tr data-id="' + escHtml(inv.id) + '" data-slug="' + escHtml(slug) + '">'
           + '<td>' + (i + 1) + '</td>'
           + '<td><input type="text" value="' + escHtml(inv.nombre || "") + '" data-field="nombre"></td>'
           + '<td><input type="number" value="' + (inv.adicionales || 0) + '" min="0" max="20" data-field="adicionales"></td>'
@@ -679,7 +706,6 @@
           + '</tr>';
       }
       tbody.innerHTML = html;
-
       var nombreInputs = tbody.querySelectorAll("input[data-field='nombre']");
       for (var j = 0; j < nombreInputs.length; j++) {
         nombreInputs[j].addEventListener("input", function() {
@@ -692,19 +718,37 @@
           }
         });
       }
-
       checkAllInvitations();
     }
 
-    function addInvitado() {
-      allInvitados.push({ nombre: "", adicionales: 0, _row: null });
-      renderInvitadosTable();
-      var inputs = document.getElementById("invitados-body").querySelectorAll("input[data-field='nombre']");
-      if (inputs.length) inputs[inputs.length - 1].focus();
+    // ==========================================
+    // CRUD INVITADOS
+    // ==========================================
+    async function addInvitado() {
+      try {
+        var res = await fetch(SUPABASE_REST + '/invitados', {
+          method: 'POST',
+          headers: SB_HEADERS,
+          body: JSON.stringify({ nombre: '', adicionales: 0 })
+        });
+        var data = await res.json();
+        if (!res.ok || !Array.isArray(data) || !data.length) {
+          showToast('Error al crear: ' + (data.message || data.error || JSON.stringify(data)), 'error');
+          return;
+        }
+        var created = data[0];
+        allInvitados.unshift(created);
+        renderInvitadosTable();
+        var inputs = document.getElementById("invitados-body").querySelectorAll("input[data-field='nombre']");
+        if (inputs.length) inputs[0].focus();
+      } catch (err) {
+        showToast('Error al crear: ' + err.message, 'error');
+      }
     }
 
     async function removeRow(btn) {
       var tr = btn.closest("tr");
+      var id = tr.getAttribute("data-id");
       var nombre = tr.querySelector("input[data-field='nombre']").value || "este invitado";
       var ok = await showConfirm(
         "Eliminar invitado",
@@ -713,85 +757,68 @@
         "btn-danger"
       );
       if (!ok) return;
-
-      fetch(DATA_URL, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain" },
-        body: JSON.stringify({ action: "deleteRsvp", nombre: nombre })
-      })
-        .then(function(resp) { return resp.json(); })
-        .then(function(data) {
-          if (!data.success) showToast("Error al borrar RSVP: " + (data.error || ""), "error");
-        })
-        .catch(function(err) { showToast("Error de red: " + err.message, "error"); });
-
-      var idx = Array.from(tr.parentNode.children).indexOf(tr);
-      allInvitados.splice(idx, 1);
-      renderInvitadosTable();
-      saveAllInvitadosSilent();
-      showToast("Invitado eliminado. Guardando cambios...", "success");
+      try {
+        await fetch(SUPABASE_REST + '/invitados?id=eq.' + id, {
+          method: 'DELETE',
+          headers: SB_HEADERS
+        });
+        await fetch(SUPABASE_REST + '/respuestas?invitado_id=eq.' + id, {
+          method: 'DELETE',
+          headers: SB_HEADERS
+        });
+        allInvitados = allInvitados.filter(function(i) { return i.id !== id; });
+        renderInvitadosTable();
+        showToast("Invitado eliminado", "success");
+      } catch (err) {
+        showToast("Error: " + err.message, "error");
+      }
     }
 
+    async function saveSingleRow(btn) {
+      var tr = btn.closest("tr");
+      var id = tr.getAttribute("data-id");
+      var nombre = tr.querySelector("input[data-field='nombre']").value.trim();
+      var adicionales = parseInt(tr.querySelector("input[data-field='adicionales']").value) || 0;
+      if (!nombre) { showToast("Escribe un nombre primero", "error"); return; }
+      btn.classList.add("saved");
+      btn.disabled = true;
+      try {
+        await fetch(SUPABASE_REST + '/invitados?id=eq.' + id, {
+          method: 'PATCH',
+          headers: SB_HEADERS,
+          body: JSON.stringify({ nombre: nombre, adicionales: adicionales })
+        });
+        var idx = allInvitados.findIndex(function(i) { return i.id === id; });
+        if (idx >= 0) {
+          allInvitados[idx].nombre = nombre;
+          allInvitados[idx].adicionales = adicionales;
+        }
+        showToast("'" + nombre + "' guardado", "success");
+      } catch (err) {
+        showToast("Error al guardar: " + err.message, "error");
+      }
+      setTimeout(function() {
+        btn.classList.remove("saved");
+        btn.disabled = false;
+      }, 1500);
+    }
+
+    // ==========================================
+    // LINKS - Invitaciones
+    // ==========================================
     async function copyLink(btn) {
       var tr = btn.closest("tr");
       var slug = tr.getAttribute("data-slug");
       if (!slug) { showToast("Primero escribe un nombre", "error"); return; }
       var url = BASE_URL + slug + ".html";
-
-      // Check if invitation exists
       try {
         await fetch(url, { method: "HEAD" });
         navigator.clipboard.writeText(url).then(function() {
           showToast("Link copiado", "success");
         });
       } catch (e) {
-        // Not found — save first, then poll
-        showToast("Guardando y generando invitacion...", "success");
-        await saveAllInvitadosSilent();
-        btn.textContent = "Generando...";
-        btn.classList.add("btn-generating");
-        btn.disabled = true;
-        pollInvitationForCopy(btn, slug, url);
+        showToast("La invitacion aun no existe. Genera primero.", "error");
       }
-    }
-
-    function pollInvitationForCopy(btn, slug, url) {
-      var attempts = 0;
-      var interval = setInterval(function () {
-        attempts++;
-        fetch(url, { method: "HEAD" })
-          .then(function () {
-            clearInterval(interval);
-            btn.textContent = "Copiar Link";
-            btn.classList.remove("btn-generating");
-            btn.disabled = false;
-            navigator.clipboard.writeText(url).then(function() {
-              showToast("Invitacion lista. Link copiado!", "success");
-            });
-          })
-          .catch(function () {
-            if (attempts >= 20) {
-              clearInterval(interval);
-              btn.textContent = "Copiar Link";
-              btn.classList.remove("btn-generating");
-              btn.disabled = false;
-              showToast("La invitacion tarda mas de lo esperado. Intenta de nuevo.", "error");
-            }
-          });
-      }, 3000);
-    }
-
-    async function saveAllInvitadosSilent() {
-      var invitados = gatherInvitadosFromTable();
-      var valid = invitados.filter(function(i) { return i.nombre && i.slug; });
-      try {
-        await fetch(DATA_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain" },
-          body: JSON.stringify({ action: "saveInvitados", invitados: valid })
-        });
-        allInvitados = valid.map(function(v, i) { v._row = i + 2; return v; });
-      } catch (err) {}
     }
 
     function openLink(btn) {
@@ -801,38 +828,13 @@
       window.open(BASE_URL + slug + ".html", "_blank");
     }
 
-    async function saveSingleRow(btn) {
-      var tr = btn.closest("tr");
-      var nombre = tr.querySelector("input[data-field='nombre']").value.trim();
-      if (!nombre) { showToast("Escribe un nombre primero", "error"); return; }
-
-      btn.classList.add("saved");
-      btn.disabled = true;
-
-      try {
-        await saveAllInvitadosSilent();
-        showToast("'" + nombre + "' guardado", "success");
-      } catch (err) {
-        showToast("Error al guardar", "error");
-      }
-
-      setTimeout(function() {
-        btn.classList.remove("saved");
-        btn.disabled = false;
-      }, 1500);
-    }
-
     async function generarInvitacion(btn) {
       var slug = btn.getAttribute("data-slug");
       if (!slug) { showToast("Primero escribe un nombre", "error"); return; }
       var url = BASE_URL + slug + ".html";
-
       btn.textContent = "Generando...";
       btn.classList.add("btn-generating");
       btn.disabled = true;
-
-      await saveAllInvitadosSilent();
-
       var attempts = 0;
       var interval = setInterval(function () {
         attempts++;
@@ -858,8 +860,6 @@
           });
       }, 3000);
     }
-
-    var BASE_URL = "https://invitaciones-de-boda-personalizada.vercel.app/invitacion/";
 
     function checkAllInvitations() {
       var btns = document.querySelectorAll(".btn-gen");
@@ -889,6 +889,9 @@
         });
     }
 
+    // ==========================================
+    // UTILS
+    // ==========================================
     function toSlug(text) {
       return text
         .toLowerCase()
@@ -912,7 +915,6 @@
         var nombre = tr.querySelector("input[data-field='nombre']").value.trim();
         var adicionales = parseInt(tr.querySelector("input[data-field='adicionales']").value) || 0;
         var slug = toSlug(nombre);
-
         result.push({ nombre: nombre, adicionales: adicionales, slug: slug });
       }
       return result;
@@ -921,7 +923,6 @@
     // ==========================================
     // FAB + SMART REFRESH
     // ==========================================
-    var _fabSpinning = false;
     function fabReload() {
       if (_fabSpinning) return;
       var btn = document.getElementById("btn-reload-header");
@@ -936,7 +937,6 @@
       });
     }
 
-    // Auto-refresh on window focus
     window.addEventListener("focus", function() {
       if (document.getElementById("dashboard").style.display === "block") {
         loadAll();
@@ -961,7 +961,6 @@
       renderConfirmacionesTable(filtered);
     }
 
-    var sortDir = 1;
     function sortTable(col) {
       var keys = ["nombre", "adicionales", "estado"];
       var key = keys[col]; sortDir *= -1;
