@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-nombre,cupos,slug
-Andr?s Alde?n Abenda?o,1,andres-aldean-abendano
-prueba de confirmaciones,1,prueba-de-confirmaciones
-=======
 ﻿nombre,adicionales,slug
 Andrés Aldeán,1,andres-aldean
 Luis Aldeán,1,luis-aldean
@@ -12,4 +7,3 @@ Ana García,1,ana-garcia
 Victor Parco,1,victor-parco
 Prueba Nueva xd,1,prueba-nueva-xd
 Test Nuevo,2,test-nuevo
->>>>>>> 637c170 (feat: migrar backend de Google Apps Script a Supabase REST API)
