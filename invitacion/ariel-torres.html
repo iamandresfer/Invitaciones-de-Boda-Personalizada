@@ -25,8 +25,22 @@
   <meta name="twitter:title" content="Gloria & Juan te invitan, Ariel Torres">
   <meta name="twitter:description" content="Estas invitado a nuestra boda. 2026-11-08 - Santo Domingo, Ecuador">
   <meta name="twitter:image" content="https://gloria-y-juan.vercel.app/assets/images/og-preview.jpg">
+  <style>
+    #rsvp-debug-log {
+      position: fixed; bottom: 0; left: 0; right: 0; max-height: 180px;
+      overflow-y: auto; background: rgba(0,0,0,0.88); color: #0f0;
+      font-family: 'Courier New', monospace; font-size: 0.7rem; padding: 8px 12px;
+      z-index: 9999; line-height: 1.5;
+    }
+    #rsvp-debug-log:empty { display: none; }
+    #rsvp-debug-log div { border-bottom: 1px solid rgba(255,255,255,0.08); padding: 1px 0; }
+    #rsvp-debug-log div:last-child { color: #ff0; }
+  </style>
 </head>
 <body>
+
+  <!-- Debug log overlay -->
+  <div id="rsvp-debug-log"></div>
 
   <!-- 1. Hero -->
   <section class="hero fade-in" id="hero" style="background-image: url('../src/assets/images/hero.jpg');">
@@ -143,9 +157,7 @@
       <div id="rsvp-success" class="rsvp-message rsvp-success" style="display: none;">
         ¡Gracias por confirmar! Tu respuesta ha sido registrada.
       </div>
-      <div id="rsvp-error" class="rsvp-message rsvp-error" style="display: none;">
-        Hubo un error al enviar tu respuesta. Por favor, intenta de nuevo.
-      </div>
+      <div id="rsvp-error" class="rsvp-message rsvp-error" style="display: none;"></div>
     </div>
   </section>
 

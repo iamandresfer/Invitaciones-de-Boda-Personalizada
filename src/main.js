@@ -4,6 +4,18 @@
 
 var RSVP_URL = "https://script.google.com/macros/s/AKfycbwp9Jm5Ux3qO5twqV3Ka1sXvZ-TLz-rLHy2HxQstrxJHyZwMcAXyPn88I0tKQpRIqtWSQ/exec";
 
+var _logs = [];
+function log(msg) {
+  var ts = new Date().toLocaleTimeString();
+  _logs.push(ts + " " + msg);
+  console.log("[RSVP]", msg);
+  var el = document.getElementById("rsvp-debug-log");
+  if (el) {
+    el.innerHTML = _logs.map(function(l) { return "<div>" + l + "</div>"; }).join("");
+    el.scrollTop = el.scrollHeight;
+  }
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   initCountdown();
   initFadeIn();
@@ -155,8 +167,9 @@ function initRsvp() {
   if (alreadyConfirmed) {
     form.style.display = "none";
     var successEl = document.getElementById("rsvp-success");
-    successEl.innerHTML = "Ya confirmaste tu asistencia. <a href='gracias.html' style='color:inherit;text-decoration:underline;'>Ver mensaje de agradecimiento</a>";
+    successEl.innerHTML = "Ya confirmaste tu asistencia. <a href='../gracias.html' style='color:inherit;text-decoration:underline;'>Ver mensaje de agradecimiento</a>";
     successEl.style.display = "block";
+    log("Invitado ya confirmo anteriormente");
     return;
   }
 
@@ -167,43 +180,60 @@ function initRsvp() {
     submitBtn.disabled = true;
     submitBtn.textContent = "Enviando...";
 
+    var cuposVal = parseInt(document.getElementById("rsvp-cupos").value, 10);
+    var msgVal = document.getElementById("rsvp-mensaje").value;
+
     var payload = {
       action: "rsvp",
       nombre: INVITADO.nombre,
       cuposAsignados: INVITADO.cupos,
-      cuposConfirmados: parseInt(
-        document.getElementById("rsvp-cupos").value,
-        10
-      ),
-      mensaje: document.getElementById("rsvp-mensaje").value,
+      cuposConfirmados: cuposVal,
+      mensaje: msgVal,
       slug: INVITADO.slug,
       fechaEnvio: new Date().toISOString(),
     };
 
+    log("Enviando RSVP: " + INVITADO.nombre + " (" + cuposVal + " cupos)");
+    log("URL: " + RSVP_URL);
+    log("Payload: " + JSON.stringify(payload));
+
     fetch(RSVP_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "text/plain" },
       body: JSON.stringify(payload),
     })
       .then(function (resp) {
+        log("Response HTTP " + resp.status + " | type: " + resp.type);
+        if (resp.type === "opaque") {
+          log("Respuesta opaca (CORS) - continuando de todas formas");
+          return { success: true };
+        }
         if (!resp.ok) throw new Error("HTTP " + resp.status);
         return resp.json();
       })
       .then(function (data) {
+        log("Respuesta: " + JSON.stringify(data));
+        if (data && data.error) {
+          throw new Error(data.error + (data.details ? " - " + data.details : ""));
+        }
+        log("RSVP exitoso! Guardando en localStorage...");
         localStorage.setItem(getStorageKey(), JSON.stringify({
           nombre: INVITADO.nombre,
           cupos: payload.cuposConfirmados,
           fecha: payload.fechaEnvio,
         }));
-        window.location.href = "gracias.html";
+        log("Redirigiendo a gracias.html...");
+        window.location.href = "../gracias.html";
       })
       .catch(function (err) {
+        log("ERROR: " + err.message);
+        log("Stack: " + (err.stack || "N/A"));
         submitBtn.disabled = false;
         submitBtn.textContent = "Confirmar Asistencia";
-        document.getElementById("rsvp-error").style.display = "block";
-        setTimeout(function () {
-          document.getElementById("rsvp-error").style.display = "none";
-        }, 5000);
+        var errEl = document.getElementById("rsvp-error");
+        errEl.textContent = "Error: " + err.message;
+        errEl.style.display = "block";
+        setTimeout(function () { errEl.style.display = "none"; }, 8000);
       });
   });
 }

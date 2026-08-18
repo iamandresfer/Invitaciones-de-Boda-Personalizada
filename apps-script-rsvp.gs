@@ -33,25 +33,48 @@ function getGithubConfig() {
 }
 
 // ==========================================
+// HELPERS
+// ==========================================
+
+function ensureSheet(name, headers) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+    sheet.appendRow(headers);
+  }
+  return sheet;
+}
+
+function jsonResponse(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function errorResponse(message, details) {
+  Logger.log("ERROR: " + message + " | " + (details || ""));
+  return jsonResponse({ success: false, error: message, details: details || "" });
+}
+
+// ==========================================
 // DISPATCH
 // ==========================================
 
 function doPost(e) {
   try {
+    Logger.log("doPost received: " + e.postData.contents);
     var data = JSON.parse(e.postData.contents);
     var action = data.action || "rsvp";
 
     if (action === "rsvp") return handleRsvp(data);
     if (action === "saveInvitados") return handleSaveInvitados(data);
 
-    return ContentService
-      .createTextOutput(JSON.stringify({ error: "Unknown action: " + action }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return errorResponse("Unknown action", action);
 
   } catch (error) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ error: error.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
+    Logger.log("doPost error: " + error.toString());
+    return errorResponse("Server error", error.toString());
   }
 }
 
@@ -65,9 +88,8 @@ function doGet(e) {
     return handleGetInvitados();
 
   } catch (error) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ error: error.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
+    Logger.log("doGet error: " + error.toString());
+    return errorResponse("Server error", error.toString());
   }
 }
 
@@ -76,12 +98,11 @@ function doGet(e) {
 // ==========================================
 
 function handleRsvp(data) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Respuestas");
-  if (!sheet) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ error: "Sheet 'Respuestas' not found" }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
+  Logger.log("RSVP data: " + JSON.stringify(data));
+
+  var sheet = ensureSheet("Respuestas", [
+    "Fecha", "Nombre", "Cupos Asignados", "Cupos Confirmados", "Mensaje", "Estado"
+  ]);
 
   var estado = (parseInt(data.cuposConfirmados) > 0) ? "Confirmado" : "Pendiente";
 
@@ -94,28 +115,8 @@ function handleRsvp(data) {
     estado
   ]);
 
-  return ContentService
-    .createTextOutput(JSON.stringify({ success: true }))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function handleGetRespuestas() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Respuestas");
-  var data = sheet.getDataRange().getValues();
-  var headers = data.shift();
-
-  var result = [];
-  for (var i = 0; i < data.length; i++) {
-    var obj = {};
-    for (var j = 0; j < headers.length; j++) {
-      obj[headers[j]] = data[i][j];
-    }
-    result.push(obj);
-  }
-
-  return ContentService
-    .createTextOutput(JSON.stringify(result))
-    .setMimeType(ContentService.MimeType.JSON);
+  Logger.log("RSVP guardado: " + data.nombre + " - " + estado);
+  return jsonResponse({ success: true, nombre: data.nombre, estado: estado });
 }
 
 // ==========================================
@@ -125,16 +126,12 @@ function handleGetRespuestas() {
 function handleGetInvitados() {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Invitados");
   if (!sheet) {
-    return ContentService
-      .createTextOutput(JSON.stringify([]))
-      .setMimeType(ContentService.MimeType.JSON);
+    return jsonResponse([]);
   }
 
   var data = sheet.getDataRange().getValues();
   if (data.length <= 1) {
-    return ContentService
-      .createTextOutput(JSON.stringify([]))
-      .setMimeType(ContentService.MimeType.JSON);
+    return jsonResponse([]);
   }
 
   var headers = data.shift();
@@ -147,16 +144,40 @@ function handleGetInvitados() {
     result.push(obj);
   }
 
-  return ContentService
-    .createTextOutput(JSON.stringify(result))
-    .setMimeType(ContentService.MimeType.JSON);
+  return jsonResponse(result);
+}
+
+function handleGetRespuestas() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Respuestas");
+  if (!sheet) {
+    Logger.log("Sheet 'Respuestas' no existe");
+    return jsonResponse([]);
+  }
+
+  var data = sheet.getDataRange().getValues();
+  if (data.length <= 1) {
+    return jsonResponse([]);
+  }
+
+  var headers = data.shift();
+  var result = [];
+  for (var i = 0; i < data.length; i++) {
+    var obj = {};
+    for (var j = 0; j < headers.length; j++) {
+      obj[headers[j]] = data[i][j];
+    }
+    result.push(obj);
+  }
+
+  Logger.log("Respuestas encontradas: " + result.length);
+  return jsonResponse(result);
 }
 
 function handleSaveInvitados(data) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Invitados");
   if (!sheet) {
     sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet("Invitados");
-    sheet.appendRow(["nombre", "cupos", "slug", "activo"]);
+    sheet.appendRow(["nombre", "cupos", "slug"]);
   }
 
   var lastRow = sheet.getLastRow();
@@ -174,16 +195,13 @@ function handleSaveInvitados(data) {
     ]);
   }
 
-  // Auto-commit CSV a GitHub
   var commitResult = commitCsvToGitHub(invitados);
 
-  return ContentService
-    .createTextOutput(JSON.stringify({
-      success: true,
-      count: invitados.length,
-      github: commitResult
-    }))
-    .setMimeType(ContentService.MimeType.JSON);
+  return jsonResponse({
+    success: true,
+    count: invitados.length,
+    github: commitResult
+  });
 }
 
 // ==========================================
