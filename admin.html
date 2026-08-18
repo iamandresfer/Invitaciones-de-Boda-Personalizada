@@ -92,6 +92,9 @@
     .btn-generar { background: #f0ead6; color: var(--olive); border-color: var(--gold); }
     .btn-generar:hover { background: #e6dfc0; }
     .btn-generating { background: #f0ead6; color: var(--olive); border-color: var(--gold); cursor: wait; animation: pulse 1.5s ease-in-out infinite; }
+    .btn-save-row { background: var(--white); color: var(--olive); border-color: var(--olive); padding: 6px 8px; }
+    .btn-save-row:hover { background: var(--olive); color: var(--white); }
+    .btn-save-row.saved { background: #27ae60; color: var(--white); border-color: #27ae60; }
     @keyframes pulse { 0%,100% { opacity: 0.7; } 50% { opacity: 1; } }
 
     /* Table */
@@ -662,6 +665,7 @@
           + '<td><input type="text" value="' + escHtml(inv.nombre || "") + '" data-field="nombre"></td>'
           + '<td><input type="number" value="' + (inv.adicionales || 0) + '" min="0" max="20" data-field="adicionales"></td>'
           + '<td><div class="actions-cell">'
+          + '<button class="btn btn-sm btn-save-row" onclick="saveSingleRow(this)" title="Guardar este registro"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>'
           + '<button class="btn btn-sm btn-generar btn-gen" onclick="generarInvitacion(this)" data-slug="' + escHtml(slug) + '" title="Generar esta invitacion">Generar</button>'
           + '<button class="btn btn-sm btn-secondary" onclick="copyLink(this)" title="Copiar link de invitacion">Copiar Link</button>'
           + '<button class="btn btn-sm btn-primary btn-ver" onclick="openLink(this)" data-slug="' + escHtml(slug) + '" title="Ver invitacion">Ver</button>'
@@ -675,7 +679,12 @@
       for (var j = 0; j < nombreInputs.length; j++) {
         nombreInputs[j].addEventListener("input", function() {
           var tr = this.closest("tr");
-          tr.setAttribute("data-slug", toSlug(this.value));
+          var newSlug = toSlug(this.value);
+          tr.setAttribute("data-slug", newSlug);
+          var btns = tr.querySelectorAll("[data-slug]");
+          for (var k = 0; k < btns.length; k++) {
+            btns[k].setAttribute("data-slug", newSlug);
+          }
         });
       }
 
@@ -782,6 +791,27 @@
       var slug = btn.getAttribute("data-slug") || tr.getAttribute("data-slug");
       if (!slug) { showToast("Primero escribe un nombre", "error"); return; }
       window.open(BASE_URL + slug + ".html", "_blank");
+    }
+
+    async function saveSingleRow(btn) {
+      var tr = btn.closest("tr");
+      var nombre = tr.querySelector("input[data-field='nombre']").value.trim();
+      if (!nombre) { showToast("Escribe un nombre primero", "error"); return; }
+
+      btn.classList.add("saved");
+      btn.disabled = true;
+
+      try {
+        await saveAllInvitadosSilent();
+        showToast("'" + nombre + "' guardado", "success");
+      } catch (err) {
+        showToast("Error al guardar", "error");
+      }
+
+      setTimeout(function() {
+        btn.classList.remove("saved");
+        btn.disabled = false;
+      }, 1500);
     }
 
     async function generarInvitacion(btn) {
