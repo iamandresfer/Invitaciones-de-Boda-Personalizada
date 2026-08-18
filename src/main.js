@@ -159,7 +159,7 @@ function initRsvp() {
       fechaEnvio: new Date().toISOString(),
     };
 
-    fetch("TU_URL_DE_APPS_SCRIPT_WEB_APP_AQUI", {
+    fetch("https://script.google.com/macros/s/AKfycbwp9Jm5Ux3qO5twqV3Ka1sXvZ-TLz-rLHy2HxQstrxJHyZwMcAXyPn88I0tKQpRIqtWSQ/exec", {
       method: "POST",
       body: JSON.stringify(payload),
       mode: "no-cors",

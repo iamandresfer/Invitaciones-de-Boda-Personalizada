@@ -170,8 +170,7 @@ function handleSaveInvitados(data) {
     sheet.appendRow([
       inv.nombre || "",
       inv.cupos || 1,
-      inv.slug || "",
-      inv.activo !== false ? "true" : "false"
+      inv.slug || ""
     ]);
   }
 
@@ -198,10 +197,10 @@ function commitCsvToGitHub(invitados) {
   }
 
   try {
-    var csv = "nombre,cupos,slug,activo\n";
+    var csv = "nombre,cupos,slug\n";
     for (var i = 0; i < invitados.length; i++) {
       var inv = invitados[i];
-      csv += csvEscape(inv.nombre) + "," + (inv.cupos || 1) + "," + csvEscape(inv.slug) + "," + (inv.activo !== false ? "true" : "false") + "\n";
+      csv += csvEscape(inv.nombre) + "," + (inv.cupos || 1) + "," + csvEscape(inv.slug) + "\n";
     }
 
     var encoded = Utilities.base64Encode(csv);
