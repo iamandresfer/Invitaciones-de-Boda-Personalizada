@@ -2,6 +2,8 @@
    Wedding Invitation – Main JS
    ======================================== */
 
+var RSVP_URL = "https://script.google.com/macros/s/AKfycbwp9Jm5Ux3qO5twqV3Ka1sXvZ-TLz-rLHy2HxQstrxJHyZwMcAXyPn88I0tKQpRIqtWSQ/exec";
+
 document.addEventListener("DOMContentLoaded", function () {
   initCountdown();
   initFadeIn();
@@ -140,14 +142,33 @@ function downloadIcs(startDate, endDate, location, details) {
 
 /* ---------- RSVP ---------- */
 
+function getStorageKey() {
+  return "boda_rsvp_" + (INVITADO ? INVITADO.slug : "");
+}
+
 function initRsvp() {
   var form = document.getElementById("rsvp-form");
   if (!form) return;
 
+  var alreadyConfirmed = localStorage.getItem(getStorageKey());
+
+  if (alreadyConfirmed) {
+    form.style.display = "none";
+    var successEl = document.getElementById("rsvp-success");
+    successEl.innerHTML = "Ya confirmaste tu asistencia. <a href='gracias.html' style='color:inherit;text-decoration:underline;'>Ver mensaje de agradecimiento</a>";
+    successEl.style.display = "block";
+    return;
+  }
+
   form.addEventListener("submit", function (e) {
     e.preventDefault();
 
+    var submitBtn = form.querySelector("button[type='submit']");
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Enviando...";
+
     var payload = {
+      action: "rsvp",
       nombre: INVITADO.nombre,
       cuposAsignados: INVITADO.cupos,
       cuposConfirmados: parseInt(
@@ -159,21 +180,30 @@ function initRsvp() {
       fechaEnvio: new Date().toISOString(),
     };
 
-    fetch("https://script.google.com/macros/s/AKfycbwp9Jm5Ux3qO5twqV3Ka1sXvZ-TLz-rLHy2HxQstrxJHyZwMcAXyPn88I0tKQpRIqtWSQ/exec", {
+    fetch(RSVP_URL, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
-      mode: "no-cors",
     })
-      .then(function () {
-        form.style.display = "none";
-        var successEl = document.getElementById("rsvp-success");
-        successEl.textContent =
-          "¡Gracias, " + INVITADO.nombre + "!";
-        successEl.style.display = "block";
+      .then(function (resp) {
+        if (!resp.ok) throw new Error("HTTP " + resp.status);
+        return resp.json();
       })
-      .catch(function () {
-        document.getElementById("rsvp-error").style.display =
-          "block";
+      .then(function (data) {
+        localStorage.setItem(getStorageKey(), JSON.stringify({
+          nombre: INVITADO.nombre,
+          cupos: payload.cuposConfirmados,
+          fecha: payload.fechaEnvio,
+        }));
+        window.location.href = "gracias.html";
+      })
+      .catch(function (err) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Confirmar Asistencia";
+        document.getElementById("rsvp-error").style.display = "block";
+        setTimeout(function () {
+          document.getElementById("rsvp-error").style.display = "none";
+        }, 5000);
       });
   });
 }

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gracias por confirmar - Gloria & Juan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Great+Vibes&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #FAFAF8;
+      --text: #2C2C2C;
+      --text-secondary: #6B6B6B;
+      --gold: #C9A96E;
+      --olive: #3B4334;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 32px 24px;
+    }
+    .thankyou { max-width: 480px; }
+    .monogram {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 3rem;
+      font-weight: 300;
+      color: var(--gold);
+      letter-spacing: 0.1em;
+      margin-bottom: 24px;
+    }
+    .monogram-ampersand {
+      font-family: 'Great Vibes', cursive;
+      font-size: 2.2rem;
+      margin: 0 4px;
+      color: var(--olive);
+    }
+    h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: 1.8rem;
+      color: var(--olive);
+      margin-bottom: 8px;
+    }
+    .guest-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 400;
+      font-style: italic;
+      font-size: 1.3rem;
+      color: var(--text);
+      margin-bottom: 24px;
+    }
+    .divider {
+      width: 60px;
+      height: 1px;
+      background: var(--gold);
+      margin: 0 auto 24px;
+    }
+    .message {
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+    }
+    .date {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.85rem;
+      color: var(--gold);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 32px;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      text-decoration: underline;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="thankyou">
+    <div class="monogram">G<span class="monogram-ampersand">&amp;</span>J</div>
+    <h1>Gracias por confirmar</h1>
+    <p class="guest-name" id="guest-name"></p>
+    <div class="divider"></div>
+    <p class="message">
+      Tu respuesta ha sido registrada exitosamente.<br>
+      Estamos muy felices de que puedas acompañarnos en este dia tan especial.
+    </p>
+    <p class="date">8 de Noviembre, 2026 &middot; Santo Domingo, Ecuador</p>
+    <a class="back-link" href="#" id="back-link">Volver a la invitacion</a>
+  </div>
+
+  <script>
+    (function () {
+      var keys = Object.keys(localStorage);
+      var rsvpKey = null;
+      for (var i = 0; i < keys.length; i++) {
+        if (keys[i].indexOf("boda_rsvp_") === 0) {
+          rsvpKey = keys[i];
+          break;
+        }
+      }
+
+      if (rsvpKey) {
+        try {
+          var data = JSON.parse(localStorage.getItem(rsvpKey));
+          if (data && data.nombre) {
+            document.getElementById("guest-name").textContent = data.nombre;
+          }
+          var slug = rsvpKey.replace("boda_rsvp_", "");
+          document.getElementById("back-link").href = "invitacion/" + slug + ".html";
+        } catch (e) {}
+      } else {
+        document.getElementById("back-link").href = "/";
+      }
+    })();
+  </script>
+</body>
+</html>

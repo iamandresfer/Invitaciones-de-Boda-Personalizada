@@ -82,6 +82,8 @@
     .btn-danger:hover { background: #a93226; }
     .btn-sm { padding: 6px 12px; font-size: 0.75rem; }
     .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-generating { background: #f0ead6; color: var(--olive); border-color: var(--gold); cursor: wait; animation: pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 0.7; } 50% { opacity: 1; } }
 
     /* Table */
     .table-wrapper { overflow-x: auto; border: 1px solid var(--border); border-radius: 4px; background: var(--white); }
@@ -396,7 +398,7 @@
           + '<td><input type="number" value="' + (inv.cupos || 1) + '" min="1" max="20" data-field="cupos"></td>'
           + '<td><div class="actions-cell">'
           + '<button class="btn btn-sm btn-primary" onclick="copyLink(this)" title="Copiar link de invitacion">Copiar Link</button>'
-          + '<button class="btn btn-sm btn-secondary" onclick="openLink(this)" title="Ver invitacion en nueva pestana">Ver</button>'
+          + '<button class="btn btn-sm btn-secondary btn-ver" onclick="openLink(this)" data-slug="' + escHtml(slug) + '" title="Ver invitacion">Ver</button>'
           + '<button class="btn btn-sm btn-danger" onclick="removeRow(this)" title="Eliminar">x</button>'
           + '</div></td>'
           + '</tr>';
@@ -410,6 +412,8 @@
           tr.setAttribute("data-slug", toSlug(this.value));
         });
       }
+
+      checkAllInvitations();
     }
 
     function addInvitado() {
@@ -446,9 +450,80 @@
 
     function openLink(btn) {
       var tr = btn.closest("tr");
-      var slug = tr.getAttribute("data-slug");
+      var slug = btn.getAttribute("data-slug") || tr.getAttribute("data-slug");
       if (!slug) { showToast("Primero escribe un nombre", "error"); return; }
       window.open("https://invitaciones-de-boda-personalizada.vercel.app/invitacion/" + slug + ".html", "_blank");
+    }
+
+    var BASE_URL = "https://invitaciones-de-boda-personalizada.vercel.app/invitacion/";
+
+    function markAllVerButtons() {
+      var btns = document.querySelectorAll(".btn-ver");
+      for (var i = 0; i < btns.length; i++) {
+        var btn = btns[i];
+        var slug = btn.getAttribute("data-slug");
+        if (!slug) continue;
+        btn.textContent = "Generando...";
+        btn.classList.add("btn-generating");
+        btn.disabled = true;
+        btn.onclick = null;
+        pollInvitation(btn, slug);
+      }
+    }
+
+    function pollInvitation(btn, slug) {
+      var attempts = 0;
+      var maxAttempts = 20;
+      var url = BASE_URL + slug + ".html";
+
+      var interval = setInterval(function () {
+        attempts++;
+        fetch(url, { method: "HEAD", mode: "no-cors" })
+          .then(function () {
+            clearInterval(interval);
+            btn.textContent = "Ver";
+            btn.classList.remove("btn-generating");
+            btn.disabled = false;
+            btn.onclick = function () { openLink(btn); };
+          })
+          .catch(function () {
+            if (attempts >= maxAttempts) {
+              clearInterval(interval);
+              btn.textContent = "Ver";
+              btn.classList.remove("btn-generating");
+              btn.disabled = false;
+              btn.onclick = function () { openLink(btn); };
+            }
+          });
+      }, 3000);
+    }
+
+    function checkAllInvitations() {
+      var btns = document.querySelectorAll(".btn-ver");
+      for (var i = 0; i < btns.length; i++) {
+        var btn = btns[i];
+        var slug = btn.getAttribute("data-slug");
+        if (!slug) continue;
+        checkSingleInvitation(btn, slug);
+      }
+    }
+
+    function checkSingleInvitation(btn, slug) {
+      var url = BASE_URL + slug + ".html";
+      fetch(url, { method: "HEAD", mode: "no-cors" })
+        .then(function () {
+          btn.textContent = "Ver";
+          btn.classList.remove("btn-generating");
+          btn.disabled = false;
+          btn.onclick = function () { openLink(btn); };
+        })
+        .catch(function () {
+          btn.textContent = "Generando...";
+          btn.classList.add("btn-generating");
+          btn.disabled = true;
+          btn.onclick = null;
+          pollInvitation(btn, slug);
+        });
     }
 
     function toSlug(text) {
@@ -500,7 +575,8 @@
           body: JSON.stringify({ action: "saveInvitados", invitados: valid })
         });
         allInvitados = valid.map(function(v, i) { v._row = i + 2; return v; });
-        showToast("Guardado. Las invitaciones se actualizan automaticamente en ~2 min.", "success");
+        showToast("Guardado. Las invitaciones se generan automaticamente en ~1-2 min.", "success");
+        markAllVerButtons();
       } catch (err) {
         showToast("Error al guardar", "error");
       }
