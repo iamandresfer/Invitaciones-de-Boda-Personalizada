@@ -73,6 +73,7 @@ function doPost(e) {
 
     if (action === "rsvp") return handleRsvp(data);
     if (action === "saveInvitados") return handleSaveInvitados(data);
+    if (action === "deleteRsvp") return handleDeleteRsvp(data);
 
     return errorResponse("Unknown action", action);
 
@@ -140,6 +141,37 @@ function handleRsvp(rsvp) {
   }
 
   return jsonResponse({ success: true, nombre: rsvp.nombre, estado: estado, updated: found });
+}
+
+function handleDeleteRsvp(data) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Respuestas");
+  if (!sheet || sheet.getLastRow() <= 1) {
+    return jsonResponse({ success: true, deleted: 0 });
+  }
+
+  var rows = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var nombreIdx = headers.indexOf("Nombre");
+  if (nombreIdx === -1) return jsonResponse({ success: true, deleted: 0 });
+
+  var nombre = (data.nombre || "").toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  var rowsToDelete = [];
+
+  for (var i = rows.length - 1; i >= 1; i--) {
+    var rowName = (rows[i][nombreIdx] || "").toString().toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (rowName === nombre) {
+      rowsToDelete.push(i + 1);
+    }
+  }
+
+  for (var j = 0; j < rowsToDelete.length; j++) {
+    sheet.deleteRow(rowsToDelete[j]);
+  }
+
+  Logger.log("Borrados " + rowsToDelete.length + " RSVPs de: " + data.nombre);
+  return jsonResponse({ success: true, deleted: rowsToDelete.length });
 }
 
 // ==========================================

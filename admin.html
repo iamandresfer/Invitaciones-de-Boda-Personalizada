@@ -429,14 +429,22 @@
       var nombre = tr.querySelector("input[data-field='nombre']").value || "este invitado";
       var ok = await showConfirm(
         "Eliminar invitado",
-        "Seguro que quieres eliminar a '" + nombre + "'? Esta accion no se puede deshacer."
+        "Seguro que quieres eliminar a '" + nombre + "'? Se borrara tambien su confirmacion RSVP."
       );
       if (!ok) return;
+
+      // Borrar RSVP del servidor inmediatamente
+      fetch(DATA_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ action: "deleteRsvp", nombre: nombre })
+      });
 
       var idx = Array.from(tr.parentNode.children).indexOf(tr);
       allInvitados.splice(idx, 1);
       renderInvitadosTable();
-      showToast("Invitado eliminado. Presiona 'Guardar' para aplicar.", "success");
+      showToast("Invitado y confirmacion eliminados. Presiona 'Guardar' para aplicar.", "success");
     }
 
     function copyLink(btn) {
