@@ -51,7 +51,10 @@
 
     /* Dashboard */
     #dashboard { display: none; max-width: 1000px; margin: 0 auto; padding: 32px 24px; }
-    h1 { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 1.5rem; margin-bottom: 24px; text-align: center; }
+    .dash-header { text-align: center; margin-bottom: 24px; }
+    .dash-header h1 { margin-bottom: 8px; }
+    .dash-header-actions { display: flex; gap: 16px; justify-content: center; align-items: center; }
+    h1 { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 1.5rem; text-align: center; }
 
     /* Tabs */
     .tabs { display: flex; gap: 0; margin-bottom: 32px; border-bottom: 2px solid var(--border); }
@@ -150,12 +153,33 @@
     .status-pendiente { color: #e67e22; font-weight: 500; }
     .status-no-asiste { color: var(--danger); font-weight: 500; }
 
+    /* FAB */
+    .fab {
+      position: fixed; bottom: 24px; right: 24px; width: 48px; height: 48px;
+      border-radius: 50%; background: var(--olive); color: var(--white);
+      border: none; font-size: 1.2rem; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      display: flex; align-items: center; justify-content: center; z-index: 50;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .fab:hover { transform: scale(1.1); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+    .fab:active { transform: scale(0.95); }
+    .fab.spinning svg { animation: spin 0.8s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* Asiste / No asiste buttons */
+    .btn-asiste { background: #27ae60; color: var(--white); border-color: #27ae60; }
+    .btn-asiste:hover { background: #219a52; }
+    .btn-no-asiste { background: var(--danger); color: var(--white); border-color: var(--danger); }
+    .btn-no-asiste:hover { background: #a93226; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
     @media (max-width: 600px) {
       #dashboard { padding: 16px; }
       .tabs { gap: 0; }
       .tab { padding: 10px 14px; font-size: 0.8rem; }
       th, td { padding: 8px 10px; font-size: 0.8rem; }
       .toolbar { flex-direction: column; }
+      .fab { bottom: 16px; right: 16px; width: 42px; height: 42px; }
     }
   </style>
 </head>
@@ -186,8 +210,13 @@
 
   <!-- Dashboard -->
   <div id="dashboard">
-    <h1>Panel de Control - Gloria & Juan</h1>
-    <p style="text-align:center;margin-bottom:24px;"><a href="#" onclick="logout()" style="font-size:0.8rem;color:var(--text-secondary);text-decoration:underline;">Cerrar sesion</a></p>
+    <div class="dash-header">
+      <h1>Panel de Control - Gloria & Juan</h1>
+      <div class="dash-header-actions">
+        <button class="btn btn-secondary btn-sm" onclick="loadAll()" id="btn-reload-header" title="Recargar datos">Recargar</button>
+        <a href="#" onclick="logout()" style="font-size:0.8rem;color:var(--text-secondary);text-decoration:underline;">Cerrar sesion</a>
+      </div>
+    </div>
 
     <div class="tabs">
       <button class="tab active" onclick="switchTab('invitados')">Invitados</button>
@@ -208,8 +237,7 @@
       <div class="toolbar">
         <div class="toolbar-left">
           <button class="btn btn-primary" onclick="addInvitado()">+ Agregar Invitado</button>
-          <button class="btn btn-secondary" onclick="saveAllInvitados()" id="btn-save">Guardar Cambios</button>
-          <button class="btn btn-secondary" onclick="loadInvitados()">Recargar</button>
+          <button class="btn btn-secondary" onclick="saveAllInvitados()" id="btn-save">Generar Invitaciones</button>
         </div>
       </div>
 
@@ -248,7 +276,6 @@
           <option value="Pendiente">Pendientes</option>
           <option value="No asiste">No Asisten</option>
         </select>
-        <button class="btn btn-secondary btn-sm" onclick="loadAll()">Recargar</button>
       </div>
 
       <div class="table-wrapper">
@@ -259,12 +286,11 @@
               <th onclick="sortTable(1)">Cupos Asignados</th>
               <th onclick="sortTable(2)">Cupos Confirmados</th>
               <th onclick="sortTable(3)">Estado</th>
-              <th onclick="sortTable(4)">Mensaje</th>
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody id="confirmaciones-body">
-            <tr><td colspan="6" class="empty-msg">Selecciona la pestana para ver datos</td></tr>
+            <tr><td colspan="5" class="empty-msg">Selecciona la pestana para ver datos</td></tr>
           </tbody>
         </table>
       </div>
@@ -273,6 +299,11 @@
 
   <!-- Toast -->
   <div class="toast" id="toast"></div>
+
+  <!-- FAB Refresh -->
+  <button class="fab" id="fab-reload" onclick="fabReload()" title="Recargar datos">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+  </button>
 
   <script>
     // ==========================================
@@ -406,8 +437,7 @@
           nombre: inv.nombre || "",
           cupos: inv.cupos || 1,
           cuposConfirmados: rsvp ? (parseInt(rsvp["Cupos Confirmados"]) || 0) : 0,
-          estado: rsvp ? (rsvp["Estado"] || "Pendiente") : "Pendiente",
-          mensaje: rsvp ? (rsvp["Mensaje"] || "-") : "-"
+          estado: rsvp ? (rsvp["Estado"] || "Pendiente") : "Pendiente"
         });
       }
     }
@@ -449,7 +479,7 @@
     function renderConfirmacionesTable(data) {
       var tbody = document.getElementById("confirmaciones-body");
       if (!data.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">No hay invitados creados aun</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">No hay invitados creados aun</td></tr>';
         return;
       }
       var html = "";
@@ -457,23 +487,20 @@
         var m = data[i];
         var estado = m.estado.toLowerCase();
         var estadoClass = estado === "confirmado" ? "confirmado" : (estado === "no asiste" ? "no-asiste" : "pendiente");
+        var escName = escHtml(m.nombre).replace(/'/g, "\\'");
 
-        var actionBtn = "";
-        if (m.estado === "Confirmado") {
-          actionBtn = '<button class="btn btn-sm btn-danger" onclick="toggleEstado(\'' + escHtml(m.nombre).replace(/'/g, "\\'") + '\', \'No asiste\')">No asiste</button>';
-        } else if (m.estado === "No asiste") {
-          actionBtn = '<button class="btn btn-sm btn-primary" style="background:#27ae60;border-color:#27ae60;" onclick="toggleEstado(\'' + escHtml(m.nombre).replace(/'/g, "\\'") + '\', \'Confirmado\')">Reactivar</button>';
-        } else {
-          actionBtn = '<button class="btn btn-sm btn-danger" onclick="toggleEstado(\'' + escHtml(m.nombre).replace(/'/g, "\\'") + '\', \'No asiste\')">No asiste</button>';
-        }
+        var btnAsisteDisabled = m.estado === "Confirmado" ? " disabled" : "";
+        var btnNoDisabled = m.estado === "No asiste" ? " disabled" : "";
 
         html += "<tr>"
           + "<td>" + escHtml(m.nombre || "-") + "</td>"
           + "<td>" + m.cupos + "</td>"
           + "<td>" + (m.estado === "Pendiente" ? "-" : m.cuposConfirmados) + "</td>"
           + "<td class='status-" + estadoClass + "'>" + m.estado + "</td>"
-          + "<td>" + escHtml(m.mensaje) + "</td>"
-          + "<td>" + actionBtn + "</td>"
+          + '<td><div class="actions-cell">'
+          + '<button class="btn btn-sm btn-asiste"' + btnAsisteDisabled + ' onclick="toggleEstado(\'' + escName + '\', \'Confirmado\')">Asiste</button>'
+          + '<button class="btn btn-sm btn-no-asiste"' + btnNoDisabled + ' onclick="toggleEstado(\'' + escName + '\', \'No asiste\')">No asiste</button>'
+          + '</div></td>'
           + "</tr>";
       }
       tbody.innerHTML = html;
@@ -598,7 +625,7 @@
       var idx = Array.from(tr.parentNode.children).indexOf(tr);
       allInvitados.splice(idx, 1);
       renderInvitadosTable();
-      showToast("Invitado y confirmacion eliminados. Presiona 'Guardar' para aplicar.", "success");
+      showToast("Invitado y confirmacion eliminados. Presiona 'Generar' para aplicar.", "success");
     }
 
     function copyLink(btn) {
@@ -738,7 +765,7 @@
           body: JSON.stringify({ action: "saveInvitados", invitados: valid })
         });
         allInvitados = valid.map(function(v, i) { v._row = i + 2; return v; });
-        showToast("Guardado. Las invitaciones se generan en ~1-2 min.", "success");
+        showToast("Invitaciones generadas. Las paginas se crean en ~1-2 min.", "success");
         markAllVerButtons();
         mergeData();
         updateStats();
@@ -747,8 +774,33 @@
       }
 
       btn.disabled = false;
-      btn.textContent = "Guardar Cambios";
+      btn.textContent = "Generar Invitaciones";
     }
+
+    // ==========================================
+    // FAB + SMART REFRESH
+    // ==========================================
+    var _fabSpinning = false;
+    function fabReload() {
+      if (_fabSpinning) return;
+      var fab = document.getElementById("fab-reload");
+      fab.classList.add("spinning");
+      _fabSpinning = true;
+      loadAll().then(function() {
+        setTimeout(function() { fab.classList.remove("spinning"); _fabSpinning = false; }, 600);
+        showToast("Datos actualizados", "success");
+      }).catch(function() {
+        fab.classList.remove("spinning");
+        _fabSpinning = false;
+      });
+    }
+
+    // Auto-refresh on window focus
+    window.addEventListener("focus", function() {
+      if (document.getElementById("dashboard").style.display === "block") {
+        loadAll();
+      }
+    });
 
     document.getElementById("inv-search").addEventListener("input", renderInvitadosTable);
     document.getElementById("inv-sort").addEventListener("change", renderInvitadosTable);
@@ -770,7 +822,7 @@
 
     var sortDir = 1;
     function sortTable(col) {
-      var keys = ["nombre", "cupos", "cuposConfirmados", "estado", "mensaje"];
+      var keys = ["nombre", "cupos", "cuposConfirmados", "estado"];
       var key = keys[col]; sortDir *= -1;
       allMerged.sort(function(a, b) {
         var va = a[key] || "", vb = b[key] || "";

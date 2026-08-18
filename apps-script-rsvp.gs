@@ -195,6 +195,31 @@ function handleUpdateEstado(data) {
 
   var nombre = data.nombre || "";
   var nuevoEstado = data.estado || "Pendiente";
+
+  // Look up cupos from Invitados sheet
+  var cuposAsignados = 0;
+  var invSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Invitados");
+  if (invSheet && invSheet.getLastRow() > 1) {
+    var invData = invSheet.getDataRange().getValues();
+    var invHeaders = invData[0];
+    var invNombreIdx = invHeaders.indexOf("nombre");
+    var invCuposIdx = invHeaders.indexOf("cupos");
+    if (invNombreIdx !== -1 && invCuposIdx !== -1) {
+      var searchName = nombre.toLowerCase()
+        .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      for (var k = 1; k < invData.length; k++) {
+        var rowName = (invData[k][invNombreIdx] || "").toString().toLowerCase()
+          .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        if (rowName === searchName) {
+          cuposAsignados = parseInt(invData[k][invCuposIdx]) || 0;
+          break;
+        }
+      }
+    }
+  }
+
+  var cuposConfirmados = (nuevoEstado === "Confirmado") ? cuposAsignados : 0;
+
   var rows = sheet.getDataRange().getValues();
   var headers = rows[0];
   var nombreIdx = headers.indexOf("Nombre");
@@ -213,18 +238,28 @@ function handleUpdateEstado(data) {
       .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     if (rowName === searchName) {
       sheet.getRange(i + 1, estadoIdx + 1).setValue(nuevoEstado);
+      // Also update Cupos Confirmados
+      var ccIdx = headers.indexOf("Cupos Confirmados");
+      if (ccIdx !== -1) {
+        sheet.getRange(i + 1, ccIdx + 1).setValue(cuposConfirmados);
+      }
+      // Also update Cupos Asignados
+      var caIdx = headers.indexOf("Cupos Asignados");
+      if (caIdx !== -1 && cuposAsignados > 0) {
+        sheet.getRange(i + 1, caIdx + 1).setValue(cuposAsignados);
+      }
       found = true;
-      Logger.log("Estado actualizado: " + nombre + " -> " + nuevoEstado);
+      Logger.log("Estado actualizado: " + nombre + " -> " + nuevoEstado + " (cuposConfirmados: " + cuposConfirmados + ")");
       break;
     }
   }
 
   if (!found) {
-    sheet.appendRow([new Date(), nombre, 0, 0, "", nuevoEstado]);
-    Logger.log("RSVP creado desde panel: " + nombre + " -> " + nuevoEstado);
+    sheet.appendRow([new Date(), nombre, cuposAsignados, cuposConfirmados, "", nuevoEstado]);
+    Logger.log("RSVP creado desde panel: " + nombre + " -> " + nuevoEstado + " (cuposConfirmados: " + cuposConfirmados + ")");
   }
 
-  return jsonResponse({ success: true, nombre: nombre, estado: nuevoEstado, updated: found });
+  return jsonResponse({ success: true, nombre: nombre, estado: nuevoEstado, cuposConfirmados: cuposConfirmados, updated: found });
 }
 
 // ==========================================

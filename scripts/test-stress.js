@@ -112,7 +112,8 @@ function cuposOptions(cupos) {
   var html = "";
   var n = parseInt(cupos);
   for (var i = 1; i <= n; i++) {
-    html += '<option value="' + i + '">' + i + " " + (i === 1 ? "cupo" : "cupos") + "</option>\n";
+    var selected = i === n ? ' selected' : "";
+    html += '<option value="' + i + '"' + selected + '>' + i + " " + (i === 1 ? "cupo" : "cupos") + "</option>\n";
   }
   return html;
 }
@@ -193,8 +194,7 @@ function mergeData(invitados, respuestas) {
       nombre: inv.nombre || "",
       cupos: inv.cupos || 1,
       cuposConfirmados: rsvp ? (parseInt(rsvp["Cupos Confirmados"]) || 0) : 0,
-      estado: rsvp ? (rsvp.Estado || "Pendiente") : "Pendiente",
-      mensaje: rsvp ? (rsvp.Mensaje || "-") : "-"
+      estado: rsvp ? (rsvp.Estado || "Pendiente") : "Pendiente"
     });
   }
   return merged;
@@ -366,6 +366,7 @@ assert(invHtml.includes('href="../src/styles.css"'), "CSS path correcto");
 assert(invHtml.includes('src="../src/main.js?v=2"'), "JS path correcto con cache bust");
 assert(invHtml.includes("Andrés Aldeán"), "Nombre del invitado en HTML");
 assert(invHtml.includes('value="2"'), "Cupos preseleccionados en RSVP");
+assert(invHtml.includes('selected'), "Option max cupos tiene selected");
 assert(invHtml.includes("rsvp-debug-log"), "Debug overlay presente");
 assert(invHtml.includes("INVITADO"), "Variable INVITADO definida");
 assert(invHtml.includes("andres-aldean"), "Slug en HTML");

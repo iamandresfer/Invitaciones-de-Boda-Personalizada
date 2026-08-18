@@ -46,7 +46,8 @@ function cuposOptions(cupos) {
   var html = "";
   var n = parseInt(cupos);
   for (var i = 1; i <= n; i++) {
-    html += '<option value="' + i + '">' + i + " " + (i === 1 ? "cupo" : "cupos") + "</option>\n";
+    var selected = i === n ? ' selected' : "";
+    html += '<option value="' + i + '"' + selected + '>' + i + " " + (i === 1 ? "cupo" : "cupos") + "</option>\n";
   }
   return html;
 }
@@ -56,17 +57,22 @@ function main() {
   var template = fs.readFileSync(TEMPLATE_PATH, "utf-8");
   var guests = parseCSV(csvText);
 
-  if (fs.existsSync(OUTPUT_DIR)) {
-    fs.rmSync(OUTPUT_DIR, { recursive: true });
+  if (!fs.existsSync(OUTPUT_DIR)) {
+    fs.mkdirSync(OUTPUT_DIR, { recursive: true });
   }
-  fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
-  console.log("Generando " + guests.length + " invitaciones...\n");
+  var created = 0, skipped = 0, updated = 0;
+
+  console.log("Procesando " + guests.length + " invitaciones...\n");
 
   guests.forEach(function(guest) {
     var nombre = guest.nombre;
     var cupos = guest.cupos;
     var slug = guest.slug;
+    if (!slug) { console.log("  SKIP sin slug: " + nombre); return; }
+
+    var outPath = path.join(OUTPUT_DIR, slug + ".html");
+    var exists = fs.existsSync(outPath);
 
     var horaParts = EVENTO.hora.split(":");
     var horaNum = parseInt(horaParts[0]);
@@ -97,12 +103,19 @@ function main() {
       .replace(/href="styles\.css(\?[^"]*)?"/g, 'href="../src/styles.css$1"')
       .replace(/src="main\.js(\?[^"]*)?"/g, 'src="../src/main.js$1"');
 
-    var outPath = path.join(OUTPUT_DIR, slug + ".html");
     fs.writeFileSync(outPath, html, "utf-8");
-    console.log("  OK " + slug + ".html (" + nombre + ", " + cupos + " cupos)");
+
+    if (exists) {
+      updated++;
+      console.log("  UPD " + slug + ".html (" + nombre + ", " + cupos + " cupos)");
+    } else {
+      created++;
+      console.log("  NEW " + slug + ".html (" + nombre + ", " + cupos + " cupos)");
+    }
   });
 
-  console.log("\nListo! " + guests.length + " invitaciones generadas en /invitacion/");
+  console.log("\nListo! " + created + " nuevas, " + updated + " actualizadas, " + skipped + " saltadas");
+  console.log("Total: " + guests.length + " invitaciones en /invitacion/");
 }
 
 main();

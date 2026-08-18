@@ -86,6 +86,18 @@
       text-decoration: underline;
       cursor: pointer;
     }
+    .calendar-section { margin-top: 28px; }
+    .calendar-section p { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px; }
+    .calendar-buttons { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .calendar-buttons .btn {
+      font-family: 'Inter', sans-serif; font-size: 0.78rem; padding: 10px 20px;
+      border-radius: 2px; cursor: pointer; text-decoration: none; display: inline-block;
+      transition: all 0.2s; border: 1px solid var(--olive);
+    }
+    .btn-gcal { background: var(--olive); color: #fff; }
+    .btn-gcal:hover { background: #2a3028; }
+    .btn-ics { background: #fff; color: var(--olive); }
+    .btn-ics:hover { background: var(--olive); color: #fff; }
   </style>
 </head>
 <body>
@@ -99,6 +111,15 @@
       Estamos muy felices de que puedas acompañarnos en este dia tan especial.
     </p>
     <p class="date">8 de Noviembre, 2026 &middot; Santo Domingo, Ecuador</p>
+
+    <div class="calendar-section">
+      <p>No olvides agregar el evento a tu calendario:</p>
+      <div class="calendar-buttons">
+        <a href="#" class="btn btn-gcal" id="btn-google-calendar" target="_blank" rel="noopener">Google Calendar</a>
+        <button class="btn btn-ics" id="btn-ics-download" type="button">Descargar .ics</button>
+      </div>
+    </div>
+
     <a class="back-link" href="#" id="back-link">Volver a la invitacion</a>
   </div>
 
@@ -125,6 +146,48 @@
       } else {
         document.getElementById("back-link").href = "/";
       }
+
+      // Calendar
+      var EVENTO_FECHA = "2026-11-08";
+      var EVENTO_HORA = "16:00";
+      var location = "Iglesia de Santo Domingo - Salon de Eventos, Santo Domingo, Ecuador";
+      var details = "Boda de Gloria & Juan - 8 de Noviembre, 2026";
+
+      function formatGcalDate(dateStr, time) {
+        var parts = dateStr.split("-");
+        return parts.join("") + "T" + time.replace(/:/g, "");
+      }
+
+      var startDate = formatGcalDate(EVENTO_FECHA, EVENTO_HORA);
+      var endDate = formatGcalDate(EVENTO_FECHA, "20:00:00");
+
+      var gcalUrl = "https://calendar.google.com/calendar/render?action=TEMPLATE"
+        + "&text=Boda+Gloria+%26+Juan"
+        + "&dates=" + startDate + "/" + endDate
+        + "&location=" + encodeURIComponent(location)
+        + "&details=" + encodeURIComponent(details);
+
+      document.getElementById("btn-google-calendar").href = gcalUrl;
+
+      document.getElementById("btn-ics-download").addEventListener("click", function () {
+        var icsContent =
+          "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Boda Gloria y Juan//ES\nBEGIN:VEVENT\n"
+          + "DTSTART:" + startDate + "\nDTEND:" + endDate + "\n"
+          + "SUMMARY:Boda Gloria & Juan\n"
+          + "DESCRIPTION:" + details + "\n"
+          + "LOCATION:" + location + "\n"
+          + "END:VEVENT\nEND:VCALENDAR";
+
+        var blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = "boda-gloria-y-juan.ics";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
     })();
   </script>
 </body>
