@@ -172,9 +172,8 @@
               <th style="width:30px">#</th>
               <th>Nombre</th>
               <th style="width:100px">Cupos</th>
-              <th style="width:180px">Slug</th>
               <th style="width:80px">Activo</th>
-              <th style="width:100px">Acciones</th>
+              <th style="width:140px">Acciones</th>
             </tr>
           </thead>
           <tbody id="invitados-body">
@@ -303,14 +302,14 @@
         renderInvitadosTable();
       } catch (err) {
         document.getElementById("invitados-body").innerHTML =
-          '<tr><td colspan="6" class="empty-msg"><p>Error al cargar. Verifica la URL del endpoint.</p></td></tr>';
+          '<tr><td colspan="5" class="empty-msg"><p>Error al cargar. Verifica la URL del endpoint.</p></td></tr>';
       }
     }
 
     function renderInvitadosTable() {
       var tbody = document.getElementById("invitados-body");
       if (!allInvitados.length) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-msg"><p>No hay invitados. Haz clic en "+ Agregar Invitado" para comenzar.</p></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg"><p>No hay invitados. Haz clic en "+ Agregar Invitado" para comenzar.</p></td></tr>';
         return;
       }
 
@@ -318,28 +317,35 @@
       for (var i = 0; i < allInvitados.length; i++) {
         var inv = allInvitados[i];
         var row = inv._row || (i + 2);
-        html += '<tr data-row="' + row + '">'
+        var slug = inv.slug || toSlug(inv.nombre || "");
+        html += '<tr data-row="' + row + '" data-slug="' + escHtml(slug) + '">'
           + '<td>' + (i + 1) + '</td>'
           + '<td><input type="text" value="' + escHtml(inv.nombre || "") + '" data-field="nombre"></td>'
           + '<td><input type="number" value="' + (inv.cupos || 1) + '" min="1" max="20" data-field="cupos"></td>'
-          + '<td><input type="text" value="' + escHtml(inv.slug || "") + '" data-field="slug" placeholder="auto"></td>'
           + '<td><select data-field="activo">'
           + '<option value="true"' + (inv.activo !== "false" ? ' selected' : '') + '>Si</option>'
           + '<option value="false"' + (inv.activo === "false" ? ' selected' : '') + '>No</option>'
           + '</select></td>'
           + '<td><div class="actions-cell">'
-          + '<button class="btn btn-sm btn-primary" onclick="copyLink(this)" title="Copiar link de invitacion">link</button>'
-          + '<button class="btn btn-sm btn-secondary" onclick="openLink(this)" title="Ver invitacion en nueva pestana">ver</button>'
-          + '<button class="btn btn-sm btn-secondary" onclick="autoSlug(this)" title="Generar slug">slug</button>'
+          + '<button class="btn btn-sm btn-primary" onclick="copyLink(this)" title="Copiar link de invitacion">&#128203; Copiar</button>'
+          + '<button class="btn btn-sm btn-secondary" onclick="openLink(this)" title="Ver invitacion en nueva pestana">Ver</button>'
           + '<button class="btn btn-sm btn-danger" onclick="removeRow(this)" title="Eliminar">x</button>'
           + '</div></td>'
           + '</tr>';
       }
       tbody.innerHTML = html;
+
+      var nombreInputs = tbody.querySelectorAll("input[data-field='nombre']");
+      for (var j = 0; j < nombreInputs.length; j++) {
+        nombreInputs[j].addEventListener("input", function() {
+          var tr = this.closest("tr");
+          tr.setAttribute("data-slug", toSlug(this.value));
+        });
+      }
     }
 
     function addInvitado() {
-      allInvitados.push({ nombre: "", cupos: 1, slug: "", activo: "true", _row: null });
+      allInvitados.push({ nombre: "", cupos: 1, activo: "true", _row: null });
       renderInvitadosTable();
       var inputs = document.getElementById("invitados-body").querySelectorAll("input[data-field='nombre']");
       if (inputs.length) inputs[inputs.length - 1].focus();
@@ -352,27 +358,20 @@
       renderInvitadosTable();
     }
 
-    function autoSlug(btn) {
-      var tr = btn.closest("tr");
-      var nombre = tr.querySelector("input[data-field='nombre']").value;
-      var slug = toSlug(nombre);
-      tr.querySelector("input[data-field='slug']").value = slug;
-    }
-
     function copyLink(btn) {
       var tr = btn.closest("tr");
-      var slug = tr.querySelector("input[data-field='slug']").value;
-      if (!slug) { showToast("Primero genera o escribe un slug", "error"); return; }
+      var slug = tr.getAttribute("data-slug");
+      if (!slug) { showToast("Primero escribe un nombre", "error"); return; }
       var url = "https://invitaciones-de-boda-personalizada.vercel.app/invitacion/" + slug + ".html";
       navigator.clipboard.writeText(url).then(function() {
-        showToast("Link copiado: " + slug + ".html", "success");
+        showToast("Link copiado", "success");
       });
     }
 
     function openLink(btn) {
       var tr = btn.closest("tr");
-      var slug = tr.querySelector("input[data-field='slug']").value;
-      if (!slug) { showToast("Primero genera o escribe un slug", "error"); return; }
+      var slug = tr.getAttribute("data-slug");
+      if (!slug) { showToast("Primero escribe un nombre", "error"); return; }
       window.open("https://invitaciones-de-boda-personalizada.vercel.app/invitacion/" + slug + ".html", "_blank");
     }
 
@@ -398,10 +397,8 @@
         if (tr.querySelector(".empty-msg")) continue;
         var nombre = tr.querySelector("input[data-field='nombre']").value.trim();
         var cupos = parseInt(tr.querySelector("input[data-field='cupos']").value) || 1;
-        var slug = tr.querySelector("input[data-field='slug']").value.trim();
         var activo = tr.querySelector("select[data-field='activo']").value;
-
-        if (!slug && nombre) slug = toSlug(nombre);
+        var slug = toSlug(nombre);
 
         result.push({ nombre: nombre, cupos: cupos, slug: slug, activo: activo });
       }
