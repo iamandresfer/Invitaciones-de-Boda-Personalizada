@@ -199,13 +199,58 @@ function handleSaveInvitados(data) {
     ]);
   }
 
+  // Auto-borrar RSVPs de invitados que ya no existen
+  var deletedRsvps = cleanRsvps(invitados);
+
   var commitResult = commitCsvToGitHub(invitados);
 
   return jsonResponse({
     success: true,
     count: invitados.length,
+    deletedRsvps: deletedRsvps,
     github: commitResult
   });
+}
+
+// ==========================================
+// CLEAN RSVPs
+// ==========================================
+
+function cleanRsvps(invitados) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Respuestas");
+  if (!sheet || sheet.getLastRow() <= 1) return 0;
+
+  // Build set of active guest names (lowercase, normalized)
+  var activeNames = {};
+  for (var i = 0; i < invitados.length; i++) {
+    var name = (invitados[i].nombre || "").toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    activeNames[name] = true;
+  }
+
+  var data = sheet.getDataRange().getValues();
+  var headers = data[0];
+  var nombreIdx = headers.indexOf("Nombre");
+  if (nombreIdx === -1) return 0;
+
+  // Find rows to delete (from bottom to top to avoid index shifting)
+  var rowsToDelete = [];
+  for (var r = data.length - 1; r >= 1; r--) {
+    var rsvpName = (data[r][nombreIdx] || "").toString().toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (!activeNames[rsvpName]) {
+      rowsToDelete.push(r + 1); // sheet rows are 1-indexed
+    }
+  }
+
+  for (var j = 0; j < rowsToDelete.length; j++) {
+    sheet.deleteRow(rowsToDelete[j]);
+  }
+
+  if (rowsToDelete.length > 0) {
+    Logger.log("Borrados " + rowsToDelete.length + " RSVPs de invitados eliminados");
+  }
+  return rowsToDelete.length;
 }
 
 // ==========================================
