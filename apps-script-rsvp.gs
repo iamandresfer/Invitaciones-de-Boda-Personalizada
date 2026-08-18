@@ -63,6 +63,10 @@ function errorResponse(message, details) {
 
 function doPost(e) {
   try {
+    if (!e || !e.postData || !e.postData.contents) {
+      Logger.log("doPost ejecutado sin request HTTP. Usa GET/POST desde el navegador.");
+      return jsonResponse({ error: "No HTTP request data. Deploy as web app and access from browser." });
+    }
     Logger.log("doPost received: " + e.postData.contents);
     var data = JSON.parse(e.postData.contents);
     var action = data.action || "rsvp";
