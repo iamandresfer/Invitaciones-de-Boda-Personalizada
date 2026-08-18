@@ -2,8 +2,6 @@
   "buildCommand": null,
   "outputDirectory": ".",
   "installCommand": "echo done",
-  "cleanUrls": true,
-  "trailingSlash": false,
   "headers": [
     {
       "source": "/invitacion/(.*)",

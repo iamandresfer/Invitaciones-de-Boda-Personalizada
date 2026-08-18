@@ -99,6 +99,20 @@
     .empty-msg { text-align: center; padding: 48px 24px; color: var(--text-secondary); }
     .empty-msg p { margin-bottom: 16px; }
 
+    /* Toggle Switch */
+    .toggle { position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer; }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0; background-color: #ccc; border-radius: 24px;
+      transition: background-color 0.3s;
+    }
+    .toggle-slider::before {
+      content: ""; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px;
+      background-color: var(--white); border-radius: 50%; transition: transform 0.3s;
+    }
+    .toggle input:checked + .toggle-slider { background-color: var(--olive); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+
     /* Stats */
     .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 24px; }
     .stat-card { background: var(--white); padding: 16px; border-radius: 4px; text-align: center; border: 1px solid var(--border); }
@@ -322,12 +336,9 @@
           + '<td>' + (i + 1) + '</td>'
           + '<td><input type="text" value="' + escHtml(inv.nombre || "") + '" data-field="nombre"></td>'
           + '<td><input type="number" value="' + (inv.cupos || 1) + '" min="1" max="20" data-field="cupos"></td>'
-          + '<td><select data-field="activo">'
-          + '<option value="true"' + (inv.activo !== "false" ? ' selected' : '') + '>Si</option>'
-          + '<option value="false"' + (inv.activo === "false" ? ' selected' : '') + '>No</option>'
-          + '</select></td>'
+          + '<td><label class="toggle"><input type="checkbox" data-field="activo"' + (inv.activo !== "false" ? ' checked' : '') + '><span class="toggle-slider"></span></label></td>'
           + '<td><div class="actions-cell">'
-          + '<button class="btn btn-sm btn-primary" onclick="copyLink(this)" title="Copiar link de invitacion">&#128203; Copiar</button>'
+          + '<button class="btn btn-sm btn-primary" onclick="copyLink(this)" title="Copiar link de invitacion">Copiar Link</button>'
           + '<button class="btn btn-sm btn-secondary" onclick="openLink(this)" title="Ver invitacion en nueva pestana">Ver</button>'
           + '<button class="btn btn-sm btn-danger" onclick="removeRow(this)" title="Eliminar">x</button>'
           + '</div></td>'
@@ -397,7 +408,7 @@
         if (tr.querySelector(".empty-msg")) continue;
         var nombre = tr.querySelector("input[data-field='nombre']").value.trim();
         var cupos = parseInt(tr.querySelector("input[data-field='cupos']").value) || 1;
-        var activo = tr.querySelector("select[data-field='activo']").value;
+        var activo = tr.querySelector("input[data-field='activo']").checked ? "true" : "false";
         var slug = toSlug(nombre);
 
         result.push({ nombre: nombre, cupos: cupos, slug: slug, activo: activo });
