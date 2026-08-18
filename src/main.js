@@ -176,6 +176,9 @@ function initRsvp() {
   form.addEventListener("submit", function (e) {
     e.preventDefault();
 
+    if (form.dataset.submitting === "true") return;
+    form.dataset.submitting = "true";
+
     var submitBtn = form.querySelector("button[type='submit']");
     submitBtn.disabled = true;
     submitBtn.textContent = "Enviando...";
@@ -228,6 +231,7 @@ function initRsvp() {
       .catch(function (err) {
         log("ERROR: " + err.message);
         log("Stack: " + (err.stack || "N/A"));
+        form.dataset.submitting = "false";
         submitBtn.disabled = false;
         submitBtn.textContent = "Confirmar Asistencia";
         var errEl = document.getElementById("rsvp-error");

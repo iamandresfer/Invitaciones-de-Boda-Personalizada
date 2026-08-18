@@ -101,26 +101,45 @@ function doGet(e) {
 // RSVP
 // ==========================================
 
-function handleRsvp(data) {
-  Logger.log("RSVP data: " + JSON.stringify(data));
+function handleRsvp(rsvp) {
+  Logger.log("RSVP data: " + JSON.stringify(rsvp));
 
   var sheet = ensureSheet("Respuestas", [
     "Fecha", "Nombre", "Cupos Asignados", "Cupos Confirmados", "Mensaje", "Estado"
   ]);
 
-  var estado = (parseInt(data.cuposConfirmados) > 0) ? "Confirmado" : "Pendiente";
-
-  sheet.appendRow([
+  var estado = (parseInt(rsvp.cuposConfirmados) > 0) ? "Confirmado" : "Pendiente";
+  var newRow = [
     new Date(),
-    data.nombre || "",
-    data.cuposAsignados || 0,
-    data.cuposConfirmados || 0,
-    data.mensaje || "",
+    rsvp.nombre || "",
+    rsvp.cuposAsignados || 0,
+    rsvp.cuposConfirmados || 0,
+    rsvp.mensaje || "",
     estado
-  ]);
+  ];
 
-  Logger.log("RSVP guardado: " + data.nombre + " - " + estado);
-  return jsonResponse({ success: true, nombre: data.nombre, estado: estado });
+  // Dedup: if same name already exists, update instead of append
+  var rows = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var nombreIdx = headers.indexOf("Nombre");
+  var found = false;
+  if (nombreIdx !== -1) {
+    for (var i = 1; i < rows.length; i++) {
+      if ((rows[i][nombreIdx] || "").toString().toLowerCase() === (rsvp.nombre || "").toString().toLowerCase()) {
+        sheet.getRange(i + 1, 1, 1, newRow.length).setValues([newRow]);
+        found = true;
+        Logger.log("RSVP actualizado: " + rsvp.nombre);
+        break;
+      }
+    }
+  }
+
+  if (!found) {
+    sheet.appendRow(newRow);
+    Logger.log("RSVP nuevo: " + rsvp.nombre + " - " + estado);
+  }
+
+  return jsonResponse({ success: true, nombre: rsvp.nombre, estado: estado, updated: found });
 }
 
 // ==========================================
