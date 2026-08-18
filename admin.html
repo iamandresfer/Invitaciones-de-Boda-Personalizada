@@ -600,13 +600,21 @@
 
       fetch(DATA_URL, {
         method: "POST",
-        mode: "no-cors",
         headers: { "Content-Type": "text/plain" },
         body: JSON.stringify({ action: "updateEstado", nombre: nombre, estado: nuevoEstado })
-      });
-
-      showToast("Estado actualizado. Recargando...", "success");
-      setTimeout(function() { loadAll(); }, 1500);
+      })
+        .then(function(resp) { return resp.json(); })
+        .then(function(data) {
+          if (data.success) {
+            showToast("Estado actualizado", "success");
+            loadAll();
+          } else {
+            showToast("Error: " + (data.error || "desconocido"), "error");
+          }
+        })
+        .catch(function(err) {
+          showToast("Error de red: " + err.message, "error");
+        });
     }
 
     // ==========================================
@@ -708,10 +716,14 @@
 
       fetch(DATA_URL, {
         method: "POST",
-        mode: "no-cors",
         headers: { "Content-Type": "text/plain" },
         body: JSON.stringify({ action: "deleteRsvp", nombre: nombre })
-      });
+      })
+        .then(function(resp) { return resp.json(); })
+        .then(function(data) {
+          if (!data.success) showToast("Error al borrar RSVP: " + (data.error || ""), "error");
+        })
+        .catch(function(err) { showToast("Error de red: " + err.message, "error"); });
 
       var idx = Array.from(tr.parentNode.children).indexOf(tr);
       allInvitados.splice(idx, 1);
@@ -728,7 +740,7 @@
 
       // Check if invitation exists
       try {
-        await fetch(url, { method: "HEAD", mode: "no-cors" });
+        await fetch(url, { method: "HEAD" });
         navigator.clipboard.writeText(url).then(function() {
           showToast("Link copiado", "success");
         });
@@ -747,7 +759,7 @@
       var attempts = 0;
       var interval = setInterval(function () {
         attempts++;
-        fetch(url, { method: "HEAD", mode: "no-cors" })
+        fetch(url, { method: "HEAD" })
           .then(function () {
             clearInterval(interval);
             btn.textContent = "Copiar Link";
@@ -775,8 +787,7 @@
       try {
         await fetch(DATA_URL, {
           method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "text/plain" },
           body: JSON.stringify({ action: "saveInvitados", invitados: valid })
         });
         allInvitados = valid.map(function(v, i) { v._row = i + 2; return v; });
@@ -825,7 +836,7 @@
       var attempts = 0;
       var interval = setInterval(function () {
         attempts++;
-        fetch(url, { method: "HEAD", mode: "no-cors" })
+        fetch(url, { method: "HEAD" })
           .then(function () {
             clearInterval(interval);
             btn.textContent = "Generado";
@@ -862,7 +873,7 @@
 
     function checkSingleGeneration(btn, slug) {
       var url = BASE_URL + slug + ".html";
-      fetch(url, { method: "HEAD", mode: "no-cors" })
+      fetch(url, { method: "HEAD" })
         .then(function () {
           btn.textContent = "Generado";
           btn.classList.remove("btn-generar", "btn-generating");
