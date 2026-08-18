@@ -17,7 +17,7 @@ const EVENTO = {
   heroImage: "src/assets/images/hero.jpg",
   detailImage: "src/assets/images/detail.jpg",
   urlBase: "https://gloria-y-juan.vercel.app",
-  rsvpEndpoint: "https://script.google.com/macros/s/AKfycbwp9Jm5Ux3qO5twqV3Ka1sXvZ-TLz-rLHy2HxQstrxJHyZwMcAXyPn88I0tKQpRIqtWSQ/exec"
+  rsvpEndpoint: "https://script.google.com/macros/s/AKfycbzN51e8vD_TvOsesZYJRr7EPawt9Q_TP7ksfjZaFG_wIeZMu6helJ4Gdicjy6iUJGYp/exec"
 };
 
 if (typeof module !== "undefined") module.exports = EVENTO;

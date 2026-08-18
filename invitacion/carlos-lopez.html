@@ -146,9 +146,6 @@
           <label for="rsvp-adicionales">¿Cuantos acompañantes?</label>
           <select id="rsvp-adicionales" name="adicionales">
             <option value="0">Solo yo</option>
-<option value="1">1 acompañante</option>
-<option value="2">2 acompañantes</option>
-<option value="3" selected>3 acompañantes</option>
 
           </select>
         </div>
@@ -182,7 +179,7 @@
   <script>
     var INVITADO = {
       nombre: "Carlos López",
-      adicionales: 3,
+      adicionales: undefined,
       slug: "carlos-lopez"
     };
     var EVENTO_FECHA = "2026-11-08";
