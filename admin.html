@@ -189,6 +189,13 @@
     .btn-no-asiste:hover { background: #a93226; }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+    /* Confirmadas section */
+    .confirmadas-section { margin-top: 32px; }
+    .section-subtitle {
+      font-family: 'Cormorant Garamond', serif; font-size: 1rem; font-weight: 400;
+      color: #27ae60; margin-bottom: 12px; padding-left: 4px;
+    }
+
     @media (max-width: 600px) {
       #dashboard { padding: 16px; }
       .tabs { gap: 0; }
@@ -305,10 +312,29 @@
               <th>Acciones</th>
             </tr>
           </thead>
-          <tbody id="confirmaciones-body">
+          <tbody id="confirmaciones-pendientes">
             <tr><td colspan="5" class="empty-msg">Selecciona la pestana para ver datos</td></tr>
           </tbody>
         </table>
+      </div>
+
+      <div class="confirmadas-section" id="confirmadas-section" style="display:none;">
+        <h3 class="section-subtitle">Confirmados</h3>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Cupos Asignados</th>
+                <th>Cupos Confirmados</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="confirmaciones-confirmados">
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -504,33 +530,62 @@
     // CONFIRMACIONES TABLE (from allMerged)
     // ==========================================
     function renderConfirmacionesTable(data) {
-      var tbody = document.getElementById("confirmaciones-body");
-      if (!data.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">No hay invitados creados aun</td></tr>';
-        return;
-      }
-      var html = "";
+      var tbodyP = document.getElementById("confirmaciones-pendientes");
+      var tbodyC = document.getElementById("confirmaciones-confirmados");
+      var sectionC = document.getElementById("confirmadas-section");
+
+      var pendientes = [];
+      var confirmados = [];
       for (var i = 0; i < data.length; i++) {
-        var m = data[i];
-        var estado = m.estado.toLowerCase();
-        var estadoClass = estado === "confirmado" ? "confirmado" : (estado === "no asiste" ? "no-asiste" : "pendiente");
-        var escName = escHtml(m.nombre).replace(/'/g, "\\'");
-
-        var btnAsisteDisabled = m.estado === "Confirmado" ? " disabled" : "";
-        var btnNoDisabled = m.estado === "No asiste" ? " disabled" : "";
-
-        html += "<tr>"
-          + "<td>" + escHtml(m.nombre || "-") + "</td>"
-          + "<td>" + m.cupos + "</td>"
-          + "<td>" + (m.estado === "Pendiente" ? "-" : m.cuposConfirmados) + "</td>"
-          + "<td class='status-" + estadoClass + "'>" + m.estado + "</td>"
-          + '<td><div class="actions-cell">'
-          + '<button class="btn btn-sm btn-asiste"' + btnAsisteDisabled + ' onclick="toggleEstado(\'' + escName + '\', \'Confirmado\')">Asiste</button>'
-          + '<button class="btn btn-sm btn-no-asiste"' + btnNoDisabled + ' onclick="toggleEstado(\'' + escName + '\', \'No asiste\')">No asiste</button>'
-          + '</div></td>'
-          + "</tr>";
+        if (data[i].estado === "Confirmado") {
+          confirmados.push(data[i]);
+        } else {
+          pendientes.push(data[i]);
+        }
       }
-      tbody.innerHTML = html;
+
+      // Pendientes / No asisten
+      if (!pendientes.length) {
+        tbodyP.innerHTML = '<tr><td colspan="5" class="empty-msg">' + (data.length ? 'Todos confirmaron!' : 'No hay invitados creados aun') + '</td></tr>';
+      } else {
+        var html = "";
+        for (var j = 0; j < pendientes.length; j++) {
+          html += buildConfirmRow(pendientes[j]);
+        }
+        tbodyP.innerHTML = html;
+      }
+
+      // Confirmados
+      if (!confirmados.length) {
+        sectionC.style.display = "none";
+        tbodyC.innerHTML = "";
+      } else {
+        sectionC.style.display = "block";
+        var html2 = "";
+        for (var k = 0; k < confirmados.length; k++) {
+          html2 += buildConfirmRow(confirmados[k]);
+        }
+        tbodyC.innerHTML = html2;
+      }
+    }
+
+    function buildConfirmRow(m) {
+      var estado = m.estado.toLowerCase();
+      var estadoClass = estado === "confirmado" ? "confirmado" : (estado === "no asiste" ? "no-asiste" : "pendiente");
+      var escName = escHtml(m.nombre).replace(/'/g, "\\'");
+      var btnAsisteDisabled = m.estado === "Confirmado" ? " disabled" : "";
+      var btnNoDisabled = m.estado === "No asiste" ? " disabled" : "";
+
+      return "<tr>"
+        + "<td>" + escHtml(m.nombre || "-") + "</td>"
+        + "<td>" + m.cupos + "</td>"
+        + "<td>" + (m.estado === "Pendiente" ? "-" : m.cuposConfirmados) + "</td>"
+        + "<td class='status-" + estadoClass + "'>" + m.estado + "</td>"
+        + '<td><div class="actions-cell">'
+        + '<button class="btn btn-sm btn-asiste"' + btnAsisteDisabled + ' onclick="toggleEstado(\'' + escName + '\', \'Confirmado\')">Asiste</button>'
+        + '<button class="btn btn-sm btn-no-asiste"' + btnNoDisabled + ' onclick="toggleEstado(\'' + escName + '\', \'No asiste\')">No asiste</button>'
+        + '</div></td>'
+        + "</tr>";
     }
 
     // ==========================================
@@ -611,7 +666,7 @@
           + '<td><div class="actions-cell">'
           + '<button class="btn btn-sm btn-primary" onclick="copyLink(this)" title="Copiar link de invitacion">Copiar Link</button>'
           + '<button class="btn btn-sm btn-secondary btn-ver" onclick="openLink(this)" data-slug="' + escHtml(slug) + '" title="Ver invitacion">Ver</button>'
-          + '<button class="btn btn-sm btn-danger" onclick="removeRow(this)" title="Eliminar">x</button>'
+          + '<button class="btn btn-sm btn-danger" onclick="removeRow(this)" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg></button>'
           + '</div></td>'
           + '</tr>';
       }
@@ -656,24 +711,78 @@
       var idx = Array.from(tr.parentNode.children).indexOf(tr);
       allInvitados.splice(idx, 1);
       renderInvitadosTable();
-      showToast("Invitado y confirmacion eliminados. Presiona 'Generar' para aplicar.", "success");
+      saveAllInvitadosSilent();
+      showToast("Invitado eliminado. Guardando cambios...", "success");
     }
 
-    function copyLink(btn) {
+    async function copyLink(btn) {
       var tr = btn.closest("tr");
       var slug = tr.getAttribute("data-slug");
       if (!slug) { showToast("Primero escribe un nombre", "error"); return; }
-      var url = "https://invitaciones-de-boda-personalizada.vercel.app/invitacion/" + slug + ".html";
-      navigator.clipboard.writeText(url).then(function() {
-        showToast("Link copiado", "success");
-      });
+      var url = BASE_URL + slug + ".html";
+
+      // Check if invitation exists
+      try {
+        await fetch(url, { method: "HEAD", mode: "no-cors" });
+        navigator.clipboard.writeText(url).then(function() {
+          showToast("Link copiado", "success");
+        });
+      } catch (e) {
+        // Not found — save first, then poll
+        showToast("Guardando y generando invitacion...", "success");
+        await saveAllInvitadosSilent();
+        btn.textContent = "Generando...";
+        btn.classList.add("btn-generating");
+        btn.disabled = true;
+        pollInvitationForCopy(btn, slug, url);
+      }
+    }
+
+    function pollInvitationForCopy(btn, slug, url) {
+      var attempts = 0;
+      var interval = setInterval(function () {
+        attempts++;
+        fetch(url, { method: "HEAD", mode: "no-cors" })
+          .then(function () {
+            clearInterval(interval);
+            btn.textContent = "Copiar Link";
+            btn.classList.remove("btn-generating");
+            btn.disabled = false;
+            navigator.clipboard.writeText(url).then(function() {
+              showToast("Invitacion lista. Link copiado!", "success");
+            });
+          })
+          .catch(function () {
+            if (attempts >= 20) {
+              clearInterval(interval);
+              btn.textContent = "Copiar Link";
+              btn.classList.remove("btn-generating");
+              btn.disabled = false;
+              showToast("La invitacion tarda mas de lo esperado. Intenta de nuevo.", "error");
+            }
+          });
+      }, 3000);
+    }
+
+    async function saveAllInvitadosSilent() {
+      var invitados = gatherInvitadosFromTable();
+      var valid = invitados.filter(function(i) { return i.nombre && i.slug; });
+      try {
+        await fetch(DATA_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "saveInvitados", invitados: valid })
+        });
+        allInvitados = valid.map(function(v, i) { v._row = i + 2; return v; });
+      } catch (err) {}
     }
 
     function openLink(btn) {
       var tr = btn.closest("tr");
       var slug = btn.getAttribute("data-slug") || tr.getAttribute("data-slug");
       if (!slug) { showToast("Primero escribe un nombre", "error"); return; }
-      window.open("https://invitaciones-de-boda-personalizada.vercel.app/invitacion/" + slug + ".html", "_blank");
+      window.open(BASE_URL + slug + ".html", "_blank");
     }
 
     var BASE_URL = "https://invitaciones-de-boda-personalizada.vercel.app/invitacion/";
@@ -796,8 +905,8 @@
           body: JSON.stringify({ action: "saveInvitados", invitados: valid })
         });
         allInvitados = valid.map(function(v, i) { v._row = i + 2; return v; });
-        showToast("Invitaciones generadas. Las paginas se crean en ~1-2 min.", "success");
-        markAllVerButtons();
+        showToast("Invitaciones guardadas. Las nuevas se generan en ~1-2 min.", "success");
+        checkAllInvitations();
         mergeData();
         updateStats();
       } catch (err) {
