@@ -207,18 +207,18 @@ function calcStats(invitados, respuestas) {
   for (var i = 0; i < invitados.length; i++) {
     totalCupos += parseInt(invitados[i].cupos) || 0;
   }
-  var confirmadas = 0, pendientes = 0, noAsisten = 0;
+  var confirmadas = 0, pendientes = 0, noAsistenCupos = 0;
   for (var j = 0; j < merged.length; j++) {
     var m = merged[j];
     if (m.estado === "Confirmado") {
       confirmadas += m.cuposConfirmados;
     } else if (m.estado === "No asiste") {
-      noAsisten += m.cuposConfirmados || m.cupos;
+      noAsistenCupos += m.cupos;
     } else {
       pendientes++;
     }
   }
-  return { totalInv, totalCupos, confirmadas, pendientes, noAsisten, merged };
+  return { totalInv, totalCupos, esperadas: totalCupos - noAsistenCupos, confirmadas, pendientes, noAsisten: noAsistenCupos, merged };
 }
 
 let stats;
@@ -234,7 +234,8 @@ stats = calcStats(
   ]
 );
 assert(stats.totalInv === 2, "Stats: 2 invitaciones");
-assert(stats.totalCupos === 5, "Stats: 5 personas esperadas (2+3)");
+assert(stats.totalCupos === 5, "Stats: 5 personas en cupos totales");
+assert(stats.esperadas === 5, "Stats: 5 personas esperadas (nadie declina)");
 assert(stats.confirmadas === 2, "Stats: 2 personas confirmadas (solo Andres)");
 assert(stats.pendientes === 1, "Stats: 1 pendiente (Eduardo)");
 assert(stats.noAsisten === 0, "Stats: 0 no asisten");
@@ -253,7 +254,8 @@ stats = calcStats(
     { Nombre: "Eduardo", Estado: "No asiste", "Cupos Confirmados": 0, Mensaje: "No puedo" },
   ]
 );
-assert(stats.totalCupos === 5, "Stats parcial: 5 esperadas");
+assert(stats.totalCupos === 5, "Stats parcial: 5 cupos totales");
+assert(stats.esperadas === 2, "Stats parcial: 2 esperadas (Eduardo declina, 5-3=2)");
 assert(stats.confirmadas === 1, "Stats parcial: Andres confirma solo 1");
 assert(stats.pendientes === 0, "Stats parcial: 0 pendientes (ambos respondieron)");
 assert(stats.noAsisten === 3, "Stats parcial: Eduardo no asiste, 3 cupos");
@@ -269,7 +271,8 @@ stats = calcStats(
   ]
 );
 assert(stats.totalInv === 1, "Stats delete: 1 invitacion (Eduardo borrado)");
-assert(stats.totalCupos === 2, "Stats delete: solo 2 esperadas");
+assert(stats.totalCupos === 2, "Stats delete: solo 2 cupos totales");
+assert(stats.esperadas === 2, "Stats delete: 2 esperadas");
 assert(stats.confirmadas === 2, "Stats delete: 2 confirmadas (solo Andres)");
 assert(stats.merged.length === 1, "Stats delete: merged solo tiene Andres");
 assert(stats.merged[0].nombre === "Andres", "Stats delete: Andres en merged");
@@ -277,7 +280,8 @@ assert(stats.merged[0].nombre === "Andres", "Stats delete: Andres en merged");
 // Case 4: empty
 stats = calcStats([], []);
 assert(stats.totalInv === 0, "Stats vacio: 0 invitaciones");
-assert(stats.totalCupos === 0, "Stats vacio: 0 esperadas");
+assert(stats.totalCupos === 0, "Stats vacio: 0 cupos totales");
+assert(stats.esperadas === 0, "Stats vacio: 0 esperadas");
 assert(stats.confirmadas === 0, "Stats vacio: 0 confirmadas");
 assert(stats.pendientes === 0, "Stats vacio: 0 pendientes");
 
@@ -288,6 +292,36 @@ stats = calcStats(
 );
 assert(stats.confirmadas === 2, "Stats normalize: nombre con/.sin tildes matchea");
 assert(stats.merged[0].estado === "Confirmado", "Stats normalize: estado correcto");
+
+// Case 6: toggle Confirmado -> No asiste reduces esperadas
+stats = calcStats(
+  [
+    { nombre: "Andres", cupos: 2 },
+    { nombre: "Luis", cupos: 3 },
+  ],
+  [
+    { Nombre: "Andres", Estado: "Confirmado", "Cupos Confirmados": 2 },
+    { Nombre: "Luis", Estado: "No asiste", "Cupos Confirmados": 0 },
+  ]
+);
+assert(stats.esperadas === 2, "Toggle: Luis No asiste -> esperadas = 5-3 = 2");
+assert(stats.confirmadas === 2, "Toggle: Andres sigue confirmado");
+assert(stats.noAsisten === 3, "Toggle: Luis 3 cupos no asisten");
+assert(stats.pendientes === 0, "Toggle: 0 pendientes");
+
+// Case 7: toggle No asiste -> Confirmado restaura esperadas
+stats = calcStats(
+  [
+    { nombre: "Andres", cupos: 2 },
+    { nombre: "Luis", cupos: 3 },
+  ],
+  [
+    { Nombre: "Andres", Estado: "Confirmado", "Cupos Confirmados": 2 },
+    { Nombre: "Luis", Estado: "Confirmado", "Cupos Confirmados": 3 },
+  ]
+);
+assert(stats.esperadas === 5, "Reactivar: Luis vuelve -> esperadas = 5");
+assert(stats.confirmadas === 5, "Reactivar: ambos confirmados = 2+3");
 
 // =============================================
 // 6. CLEAN RSVPS LOGIC (simulated)

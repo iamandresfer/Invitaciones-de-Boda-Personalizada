@@ -128,7 +128,12 @@
 
     /* Stats */
     .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 24px; }
-    .stat-card { background: var(--white); padding: 16px; border-radius: 4px; text-align: center; border: 1px solid var(--border); }
+    .stat-card { background: var(--white); padding: 16px; border-radius: 4px; text-align: center; border: 1px solid var(--border); border-left: 4px solid var(--border); }
+    .stat-card.inv { border-left-color: #999; }
+    .stat-card.esperadas { border-left-color: #2980b9; }
+    .stat-card.confirmadas { border-left-color: #27ae60; }
+    .stat-card.pendientes { border-left-color: #e67e22; }
+    .stat-card.no-asisten { border-left-color: #c0392b; }
     .stat-number { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: var(--olive); line-height: 1; }
     .stat-label { font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-secondary); margin-top: 4px; }
 
@@ -228,11 +233,11 @@
     <!-- TAB: CONFIRMACIONES -->
     <div class="tab-panel" id="panel-confirmaciones">
       <div class="stats">
-        <div class="stat-card"><div class="stat-number" id="stat-inv">-</div><div class="stat-label">Invitaciones</div></div>
-        <div class="stat-card"><div class="stat-number" id="stat-esperadas">-</div><div class="stat-label">Personas Esperadas</div></div>
-        <div class="stat-card"><div class="stat-number" id="stat-confirmadas">-</div><div class="stat-label">Confirmadas</div></div>
-        <div class="stat-card"><div class="stat-number" id="stat-pendientes">-</div><div class="stat-label">Pendientes</div></div>
-        <div class="stat-card"><div class="stat-number" id="stat-no-asisten">-</div><div class="stat-label">No Asisten</div></div>
+        <div class="stat-card inv"><div class="stat-number" id="stat-inv">-</div><div class="stat-label">Invitaciones</div></div>
+        <div class="stat-card esperadas"><div class="stat-number" id="stat-esperadas">-</div><div class="stat-label">Personas Esperadas</div></div>
+        <div class="stat-card confirmadas"><div class="stat-number" id="stat-confirmadas">-</div><div class="stat-label">Confirmadas</div></div>
+        <div class="stat-card pendientes"><div class="stat-number" id="stat-pendientes">-</div><div class="stat-label">Pendientes</div></div>
+        <div class="stat-card no-asisten"><div class="stat-number" id="stat-no-asisten">-</div><div class="stat-label">No Asisten</div></div>
       </div>
 
       <div class="filter-bar">
@@ -255,10 +260,11 @@
               <th onclick="sortTable(2)">Cupos Confirmados</th>
               <th onclick="sortTable(3)">Estado</th>
               <th onclick="sortTable(4)">Mensaje</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody id="confirmaciones-body">
-            <tr><td colspan="5" class="empty-msg">Selecciona la pestana para ver datos</td></tr>
+            <tr><td colspan="6" class="empty-msg">Selecciona la pestana para ver datos</td></tr>
           </tbody>
         </table>
       </div>
@@ -416,23 +422,25 @@
         totalCupos += parseInt(allInvitados[i].cupos) || 0;
       }
 
-      var confirmadas = 0, pendientes = 0, noAsisten = 0;
+      var confirmadas = 0, pendientes = 0, noAsistenCupos = 0;
       for (var j = 0; j < allMerged.length; j++) {
         var m = allMerged[j];
         if (m.estado === "Confirmado") {
           confirmadas += m.cuposConfirmados;
         } else if (m.estado === "No asiste") {
-          noAsisten += m.cuposConfirmados || m.cupos;
+          noAsistenCupos += m.cupos;
         } else {
           pendientes++;
         }
       }
 
+      var esperadas = totalCupos - noAsistenCupos;
+
       document.getElementById("stat-inv").textContent = totalInv;
-      document.getElementById("stat-esperadas").textContent = totalCupos;
+      document.getElementById("stat-esperadas").textContent = esperadas;
       document.getElementById("stat-confirmadas").textContent = confirmadas;
       document.getElementById("stat-pendientes").textContent = pendientes;
-      document.getElementById("stat-no-asisten").textContent = noAsisten;
+      document.getElementById("stat-no-asisten").textContent = noAsistenCupos;
     }
 
     // ==========================================
@@ -441,7 +449,7 @@
     function renderConfirmacionesTable(data) {
       var tbody = document.getElementById("confirmaciones-body");
       if (!data.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">No hay invitados creados aun</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">No hay invitados creados aun</td></tr>';
         return;
       }
       var html = "";
@@ -449,15 +457,47 @@
         var m = data[i];
         var estado = m.estado.toLowerCase();
         var estadoClass = estado === "confirmado" ? "confirmado" : (estado === "no asiste" ? "no-asiste" : "pendiente");
+
+        var actionBtn = "";
+        if (m.estado === "Confirmado") {
+          actionBtn = '<button class="btn btn-sm btn-danger" onclick="toggleEstado(\'' + escHtml(m.nombre).replace(/'/g, "\\'") + '\', \'No asiste\')">No asiste</button>';
+        } else if (m.estado === "No asiste") {
+          actionBtn = '<button class="btn btn-sm btn-primary" style="background:#27ae60;border-color:#27ae60;" onclick="toggleEstado(\'' + escHtml(m.nombre).replace(/'/g, "\\'") + '\', \'Confirmado\')">Reactivar</button>';
+        } else {
+          actionBtn = '<button class="btn btn-sm btn-danger" onclick="toggleEstado(\'' + escHtml(m.nombre).replace(/'/g, "\\'") + '\', \'No asiste\')">No asiste</button>';
+        }
+
         html += "<tr>"
           + "<td>" + escHtml(m.nombre || "-") + "</td>"
           + "<td>" + m.cupos + "</td>"
           + "<td>" + (m.estado === "Pendiente" ? "-" : m.cuposConfirmados) + "</td>"
           + "<td class='status-" + estadoClass + "'>" + m.estado + "</td>"
           + "<td>" + escHtml(m.mensaje) + "</td>"
+          + "<td>" + actionBtn + "</td>"
           + "</tr>";
       }
       tbody.innerHTML = html;
+    }
+
+    // ==========================================
+    // TOGGLE ESTADO (confirmar / no asiste / reactivar)
+    // ==========================================
+    async function toggleEstado(nombre, nuevoEstado) {
+      var ok = await showConfirm(
+        "Cambiar estado",
+        "Seguro que quieres marcar a '" + nombre + "' como '" + nuevoEstado + "'?"
+      );
+      if (!ok) return;
+
+      fetch(DATA_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain" },
+        body: JSON.stringify({ action: "updateEstado", nombre: nombre, estado: nuevoEstado })
+      });
+
+      showToast("Estado actualizado. Recargando...", "success");
+      setTimeout(function() { loadAll(); }, 1500);
     }
 
     // ==========================================

@@ -74,6 +74,7 @@ function doPost(e) {
     if (action === "rsvp") return handleRsvp(data);
     if (action === "saveInvitados") return handleSaveInvitados(data);
     if (action === "deleteRsvp") return handleDeleteRsvp(data);
+    if (action === "updateEstado") return handleUpdateEstado(data);
 
     return errorResponse("Unknown action", action);
 
@@ -172,6 +173,47 @@ function handleDeleteRsvp(data) {
 
   Logger.log("Borrados " + rowsToDelete.length + " RSVPs de: " + data.nombre);
   return jsonResponse({ success: true, deleted: rowsToDelete.length });
+}
+
+function handleUpdateEstado(data) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Respuestas");
+  if (!sheet) {
+    sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet("Respuestas");
+    sheet.appendRow(["Fecha", "Nombre", "Cupos Asignados", "Cupos Confirmados", "Mensaje", "Estado"]);
+  }
+
+  var nombre = data.nombre || "";
+  var nuevoEstado = data.estado || "Pendiente";
+  var rows = sheet.getDataRange().getValues();
+  var headers = rows[0];
+  var nombreIdx = headers.indexOf("Nombre");
+  var estadoIdx = headers.indexOf("Estado");
+
+  if (nombreIdx === -1 || estadoIdx === -1) {
+    return jsonResponse({ success: false, error: "Columnas Nombre/Estado no encontradas" });
+  }
+
+  var searchName = nombre.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  var found = false;
+
+  for (var i = 1; i < rows.length; i++) {
+    var rowName = (rows[i][nombreIdx] || "").toString().toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (rowName === searchName) {
+      sheet.getRange(i + 1, estadoIdx + 1).setValue(nuevoEstado);
+      found = true;
+      Logger.log("Estado actualizado: " + nombre + " -> " + nuevoEstado);
+      break;
+    }
+  }
+
+  if (!found) {
+    sheet.appendRow([new Date(), nombre, 0, 0, "", nuevoEstado]);
+    Logger.log("RSVP creado desde panel: " + nombre + " -> " + nuevoEstado);
+  }
+
+  return jsonResponse({ success: true, nombre: nombre, estado: nuevoEstado, updated: found });
 }
 
 // ==========================================
