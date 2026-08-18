@@ -153,39 +153,39 @@ function initRsvp() {
     submitBtn.disabled = true;
     submitBtn.textContent = "Enviando...";
 
-    var cuposVal = parseInt(document.getElementById("rsvp-adicionales").value, 10);
-    var fechaEnvio = new Date().toISOString();
+        var cuposVal = parseInt(document.getElementById("rsvp-adicionales").value, 10);
 
-    log("Enviando RSVP: " + INVITADO.nombre + " (+" + cuposVal + " accompanyantes)");
-    log("Supabase: " + SUPABASE_REST);
+        log("Enviando RSVP: " + INVITADO.nombre + " (+" + cuposVal + " accompanyantes)");
+        log("Supabase: " + SUPABASE_REST);
 
-    // Step 1: Get invitado ID by slug
-    fetch(SUPABASE_REST + '/invitados?slug=eq.' + INVITADO.slug + '&select=id', {
-      headers: RSVP_HEADERS
-    })
-      .then(function(resp) {
-        if (!resp.ok) throw new Error("Error al buscar invitado: HTTP " + resp.status);
-        return resp.json();
-      })
-      .then(function(rows) {
-        if (!rows || !rows.length) throw new Error("Invitado no encontrado en la base de datos");
-        var invitadoId = rows[0].id;
-        log("Invitado ID: " + invitadoId);
+        // Step 1: Get invitado ID by slug
+        fetch(SUPABASE_REST + '/invitados?slug=eq.' + INVITADO.slug + '&select=id', {
+          headers: RSVP_HEADERS
+        })
+          .then(function(resp) {
+            if (!resp.ok) throw new Error("Error al buscar invitado: HTTP " + resp.status);
+            return resp.json();
+          })
+          .then(function(rows) {
+            if (!rows || !rows.length) throw new Error("Invitado no encontrado en la base de datos");
+            var invitadoId = rows[0].id;
+            log("Invitado ID: " + invitadoId);
 
-        // Step 2: Upsert RSVP response
-        var payload = {
-          invitado_id: invitadoId,
-          adicionales_confirmados: cuposVal,
-          estado: cuposVal > 0 ? "Confirmado" : "No asiste",
-          fecha_envio: fechaEnvio
-        };
-        log("Payload: " + JSON.stringify(payload));
+            // Step 2: Upsert RSVP response
+            var payload = {
+              invitado_id: invitadoId,
+              nombre: INVITADO.nombre,
+              adicionales_asignados: INVITADO.adicionales,
+              adicionales_confirmados: cuposVal,
+              estado: cuposVal > 0 ? "Confirmado" : "No asiste"
+            };
+            log("Payload: " + JSON.stringify(payload));
 
-        return fetch(SUPABASE_REST + '/respuestas', {
-          method: 'POST',
-          headers: Object.assign({}, RSVP_HEADERS, { Prefer: 'resolution=merge-duplicates,return=representation' }),
-          body: JSON.stringify(payload)
-        });
+            return fetch(SUPABASE_REST + '/respuestas', {
+              method: 'POST',
+              headers: Object.assign({}, RSVP_HEADERS, { Prefer: 'resolution=merge-duplicates,return=representation' }),
+              body: JSON.stringify(payload)
+            });
       })
       .then(function(resp) {
         log("Response HTTP " + resp.status);

@@ -268,7 +268,6 @@
         submitBtn.textContent = "Enviando...";
 
         var cuposVal = parseInt(document.getElementById("rsvp-adicionales").value, 10);
-        var fechaEnvio = new Date().toISOString();
 
         log("Enviando RSVP: " + INVITADO.nombre + " (+" + cuposVal + " acompanantes)");
 
@@ -289,9 +288,10 @@
               headers: Object.assign({}, HEADERS, { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=representation' }),
               body: JSON.stringify({
                 invitado_id: invitadoId,
+                nombre: INVITADO.nombre,
+                adicionales_asignados: INVITADO.adicionales,
                 adicionales_confirmados: cuposVal,
-                estado: cuposVal > 0 ? "Confirmado" : "No asiste",
-                fecha_envio: fechaEnvio
+                estado: cuposVal > 0 ? "Confirmado" : "No asiste"
               })
             });
           })
