@@ -733,42 +733,56 @@
     // ==========================================
     // CRUD INVITADOS
     // ==========================================
+    var _newCounter = 0;
+
     async function autoSaveRow(tr) {
       var id = tr.getAttribute("data-id");
       var nombre = tr.querySelector("input[data-field='nombre']").value.trim();
       var adicionales = parseInt(tr.querySelector("input[data-field='adicionales']").value) || 0;
-      if (!nombre || !id) return;
+      if (!nombre) return;
+      var slug = toSlug(nombre);
+
       try {
-        await fetch(SUPABASE_REST + '/invitados?id=eq.' + id, {
-          method: 'PATCH',
-          headers: SB_HEADERS,
-          body: JSON.stringify({ nombre: nombre, adicionales: adicionales })
-        });
-        var idx = allInvitados.findIndex(function(i) { return i.id === id; });
-        if (idx >= 0) { allInvitados[idx].nombre = nombre; allInvitados[idx].adicionales = adicionales; }
-      } catch (err) {}
+        if (id && id.indexOf("new-") === 0) {
+          // New row — INSERT
+          var res = await fetch(SUPABASE_REST + '/invitados', {
+            method: 'POST',
+            headers: SB_HEADERS,
+            body: JSON.stringify({ nombre: nombre, adicionales: adicionales, slug: slug })
+          });
+          var data = await res.json();
+          if (res.ok && data && data.length) {
+            tr.setAttribute("data-id", data[0].id);
+            tr.setAttribute("data-slug", slug);
+            tr.querySelectorAll("[data-slug]").forEach(function(b) { b.setAttribute("data-slug", slug); });
+            allInvitados.push(data[0]);
+            showToast("'" + nombre + "' creado", "success");
+          } else {
+            showToast("Error: " + (data.message || JSON.stringify(data)), "error");
+          }
+        } else if (id) {
+          // Existing row — PATCH
+          await fetch(SUPABASE_REST + '/invitados?id=eq.' + id, {
+            method: 'PATCH',
+            headers: SB_HEADERS,
+            body: JSON.stringify({ nombre: nombre, adicionales: adicionales, slug: slug })
+          });
+          tr.setAttribute("data-slug", slug);
+          tr.querySelectorAll("[data-slug]").forEach(function(b) { b.setAttribute("data-slug", slug); });
+          var idx = allInvitados.findIndex(function(i) { return i.id === id; });
+          if (idx >= 0) { allInvitados[idx].nombre = nombre; allInvitados[idx].adicionales = adicionales; allInvitados[idx].slug = slug; }
+        }
+      } catch (err) {
+        showToast("Error al guardar: " + err.message, "error");
+      }
     }
 
-    async function addInvitado() {
-      try {
-        var res = await fetch(SUPABASE_REST + '/invitados', {
-          method: 'POST',
-          headers: SB_HEADERS,
-          body: JSON.stringify({ nombre: '', adicionales: 0 })
-        });
-        var data = await res.json();
-        if (!res.ok || !Array.isArray(data) || !data.length) {
-          showToast('Error al crear: ' + (data.message || data.error || JSON.stringify(data)), 'error');
-          return;
-        }
-        var created = data[0];
-        allInvitados.unshift(created);
-        renderInvitadosTable();
-        var inputs = document.getElementById("invitados-body").querySelectorAll("input[data-field='nombre']");
-        if (inputs.length) inputs[0].focus();
-      } catch (err) {
-        showToast('Error al crear: ' + err.message, 'error');
-      }
+    function addInvitado() {
+      _newCounter++;
+      allInvitados.unshift({ id: "new-" + _newCounter, nombre: "", adicionales: 0, slug: "", created_at: new Date().toISOString() });
+      renderInvitadosTable();
+      var inputs = document.getElementById("invitados-body").querySelectorAll("input[data-field='nombre']");
+      if (inputs.length) inputs[0].focus();
     }
 
     async function removeRow(btn) {
@@ -782,16 +796,19 @@
         "btn-danger"
       );
       if (!ok) return;
-      try {
-        await fetch(SUPABASE_REST + '/invitados?id=eq.' + id, {
-          method: 'DELETE',
-          headers: SB_HEADERS
-        });
-        await fetch(SUPABASE_REST + '/respuestas?invitado_id=eq.' + id, {
-          method: 'DELETE',
-          headers: SB_HEADERS
-        });
-        allInvitados = allInvitados.filter(function(i) { return i.id !== id; });
+      if (id && id.indexOf("new-") !== 0) {
+        try {
+          await fetch(SUPABASE_REST + '/invitados?id=eq.' + id, {
+            method: 'DELETE',
+            headers: SB_HEADERS
+          });
+          await fetch(SUPABASE_REST + '/respuestas?invitado_id=eq.' + id, {
+            method: 'DELETE',
+            headers: SB_HEADERS
+          });
+        } catch (err) {}
+      }
+      allInvitados = allInvitados.filter(function(i) { return i.id !== id; });
         renderInvitadosTable();
         showToast("Invitado eliminado", "success");
       } catch (err) {
