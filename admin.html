@@ -744,17 +744,24 @@
 
       try {
         if (id && id.indexOf("new-") === 0) {
-          // New row — INSERT
+          // New row — INSERT then PATCH slug (trigger sobreescribe el slug en INSERT)
           var res = await fetch(SUPABASE_REST + '/invitados', {
             method: 'POST',
             headers: SB_HEADERS,
-            body: JSON.stringify({ nombre: nombre, adicionales: adicionales, slug: slug })
+            body: JSON.stringify({ nombre: nombre, adicionales: adicionales })
           });
           var data = await res.json();
           if (res.ok && data && data.length) {
-            tr.setAttribute("data-id", data[0].id);
+            var newId = data[0].id;
+            await fetch(SUPABASE_REST + '/invitados?id=eq.' + newId, {
+              method: 'PATCH',
+              headers: SB_HEADERS,
+              body: JSON.stringify({ slug: slug })
+            });
+            tr.setAttribute("data-id", newId);
             tr.setAttribute("data-slug", slug);
             tr.querySelectorAll("[data-slug]").forEach(function(b) { b.setAttribute("data-slug", slug); });
+            data[0].slug = slug;
             allInvitados.push(data[0]);
             showToast("'" + nombre + "' creado", "success");
           } else {
