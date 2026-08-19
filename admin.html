@@ -111,6 +111,7 @@
       cursor: pointer; color: var(--text-secondary); transition: all 0.2s; padding: 0;
     }
     .btn-icon:hover { border-color: var(--olive); color: var(--olive); }
+    .btn-icon-confirm:hover { border-color: #27ae60; color: #27ae60; }
     .btn-icon-danger:hover { border-color: var(--danger); color: var(--danger); }
     [contenteditable] { outline: none; cursor: text; border-radius: 2px; transition: background 0.15s; }
     [contenteditable]:focus { background: #f5f8f5; }
@@ -193,11 +194,9 @@
     .footer-brand:hover { opacity: 1; }
     .footer-logo { height: 16px; width: auto; }
 
-    /* Asiste / No asiste buttons */
+    /* Asiste / No asiste (kept for future use) */
     .btn-asiste { background: #27ae60; color: var(--white); border-color: #27ae60; }
-    .btn-asiste:hover { background: #219a52; }
     .btn-no-asiste { background: var(--danger); color: var(--white); border-color: var(--danger); }
-    .btn-no-asiste:hover { background: #a93226; }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
     /* Confirmadas section */
@@ -326,10 +325,10 @@
         <table>
           <thead>
             <tr>
-              <th onclick="sortTable(0)">Nombre</th>
-              <th onclick="sortTable(1)">Adicionales</th>
-              <th onclick="sortTable(2)">Estado</th>
-              <th>Acciones</th>
+              <th>Nombre</th>
+              <th style="width:40px; text-align:center">+</th>
+              <th>Estado</th>
+              <th style="width:80px; text-align:center">Acciones</th>
             </tr>
           </thead>
           <tbody id="confirmaciones-pendientes">
@@ -345,9 +344,9 @@
             <thead>
               <tr>
                 <th>Nombre</th>
-                <th>Adicionales</th>
+                <th style="width:40px; text-align:center">+</th>
                 <th>Estado</th>
-                <th>Acciones</th>
+                <th style="width:80px; text-align:center">Acciones</th>
               </tr>
             </thead>
             <tbody id="confirmaciones-confirmados">
@@ -364,8 +363,8 @@
   <!-- Footer fijo -->
   <footer class="site-footer-fixed">
     <a href="#" target="_blank" rel="noopener" class="footer-brand">
-        <img src="/src/assets/images/logo_andev_dark.svg" alt="AnDev" class="footer-logo">
       <span>Powered by</span>
+        <img src="/src/assets/images/logo_andev_dark.svg" alt="AnDev" class="footer-logo">
     </a>
   </footer>
 
@@ -621,11 +620,11 @@
       var btnNoDisabled = m.estado === "No asiste" ? " disabled" : "";
       return "<tr>"
         + "<td>" + escHtml(m.nombre || "-") + "</td>"
-        + "<td>" + (1 + (m.adicionales || 0)) + "</td>"
+        + "<td style='text-align:center'>" + (1 + (m.adicionales || 0)) + "</td>"
         + "<td class='status-" + estadoClass + "'>" + m.estado + "</td>"
-        + '<td><div class="actions-cell">'
-        + '<button class="btn btn-sm btn-asiste"' + btnAsisteDisabled + ' onclick="toggleEstado(\'' + escName + '\', \'Confirmado\')">Asiste</button>'
-        + '<button class="btn btn-sm btn-no-asiste"' + btnNoDisabled + ' onclick="toggleEstado(\'' + escName + '\', \'No asiste\')">No asiste</button>'
+        + '<td><div class="actions-cell" style="justify-content:center">'
+        + '<button class="btn-icon btn-icon-confirm"' + btnAsisteDisabled + ' onclick="toggleEstado(\'' + escName + '\', \'Confirmado\')" title="Confirmar asistencia"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>'
+        + '<button class="btn-icon btn-icon-danger"' + btnNoDisabled + ' onclick="toggleEstado(\'' + escName + '\', \'No asiste\')" title="No asiste"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>'
         + '</div></td>'
         + "</tr>";
     }
