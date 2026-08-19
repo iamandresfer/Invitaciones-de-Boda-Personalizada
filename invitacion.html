@@ -49,6 +49,14 @@
     }
     .rsvp-section .section-title { color: #3B4334; }
 
+    /* Closing con fondo CTA */
+    .closing-section {
+      background: linear-gradient(135deg, #f5f0e6 0%, #ede5d5 100%);
+      padding: 64px 0;
+    }
+    .closing-section .closing-thanks { color: #3B4334; }
+    .closing-section .closing-date { color: #8A8A8A; }
+
     /* Monograma: cursiva para iniciales, serifa para & */
     .monogram-initials {
       font-family: 'Great Vibes', cursive;
@@ -217,7 +225,7 @@
     <section class="section closing-section fade-in" id="cierre">
       <div class="container">
         <p class="closing-thanks">Gracias, <span id="inv-closing-name"></span></p>
-        <div class="monogram"><span class="monogram-initials">G<span class="monogram-ampersand">&amp;</span>J</span></div>
+        <img src="/src/assets/images/monogram.svg" alt="G & J" class="monogram-img" style="height:80px; width:auto;">
         <p class="closing-date">08 &middot; 11 &middot; 2026</p>
       </div>
     </section>
@@ -225,7 +233,7 @@
     <!-- Footer fijo -->
     <footer class="site-footer-fixed">
       <a href="#" target="_blank" rel="noopener" class="footer-brand">
-        <img src="/src/assets/images/logo-andev.svg" alt="AnDev" class="footer-logo">
+        <img src="/src/assets/images/logo_ligth.svg" alt="AnDev" class="footer-logo">
         <span>Desarrollado por <strong>AnDev</strong> &middot; Desarrollador FullStack con IA</span>
       </a>
     </footer>
@@ -248,7 +256,6 @@
     function log(msg) {
       var ts = new Date().toLocaleTimeString();
       _logs.push(ts + " " + msg);
-      console.log("[RSVP]", msg);
       var el = document.getElementById("rsvp-debug-log");
       if (el) {
         el.innerHTML = _logs.map(function(l) { return "<div>" + l + "</div>"; }).join("");
@@ -393,7 +400,7 @@
 
           document.getElementById("inv-hero-name").textContent = INVITADO.nombre;
           document.getElementById("inv-closing-name").textContent = INVITADO.nombre;
-          document.title = "Gloria & Juan te invitan, " + INVITADO.nombre;
+          document.title = INVITADO.nombre + " - Invitacion";
 
           document.getElementById("loading-screen").classList.add("hidden");
           document.getElementById("invitation-content").style.display = "block";
