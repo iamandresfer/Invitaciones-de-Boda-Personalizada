@@ -816,11 +816,8 @@
         } catch (err) {}
       }
       allInvitados = allInvitados.filter(function(i) { return i.id !== id; });
-        renderInvitadosTable();
-        showToast("Invitado eliminado", "success");
-      } catch (err) {
-        showToast("Error: " + err.message, "error");
-      }
+      renderInvitadosTable();
+      showToast("Invitado eliminado", "success");
     }
 
     // ==========================================
