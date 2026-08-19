@@ -51,7 +51,7 @@
     .login-error { color: var(--danger); font-size: 0.8rem; margin-top: 8px; display: none; }
 
     /* Dashboard */
-    #dashboard { display: none; max-width: 1000px; margin: 0 auto; padding: 32px 24px; }
+    #dashboard { display: none; max-width: 1000px; margin: 0 auto; padding: 32px 24px 56px; }
     .dash-header { text-align: center; margin-bottom: 24px; }
     .dash-header h1 { margin-bottom: 8px; }
     .dash-header-actions { display: flex; gap: 16px; justify-content: center; align-items: center; }
@@ -178,16 +178,16 @@
       position: fixed; bottom: 0; left: 0; right: 0;
       background: rgba(250,250,248,0.9); backdrop-filter: blur(8px);
       border-top: 1px solid var(--border);
-      padding: 8px 16px; z-index: 99;
+      padding: 10px 16px; z-index: 99;
       text-align: center;
     }
     .footer-brand {
-      display: inline-flex; align-items: center; gap: 6px;
-      font-size: 0.6rem; color: var(--text-secondary); text-decoration: none;
-      opacity: 0.6; transition: opacity 0.2s;
+      display: inline-flex; align-items: center; gap: 8px;
+      font-size: 0.75rem; color: var(--text-secondary); text-decoration: none;
+      opacity: 0.7; transition: opacity 0.2s;
     }
     .footer-brand:hover { opacity: 1; }
-    .footer-logo { height: 12px; width: auto; }
+    .footer-logo { height: 16px; width: auto; }
 
     /* Asiste / No asiste buttons */
     .btn-asiste { background: #27ae60; color: var(--white); border-color: #27ae60; }
@@ -207,8 +207,13 @@
       #dashboard { padding: 16px; }
       .tabs { gap: 0; }
       .tab { padding: 10px 14px; font-size: 0.8rem; }
-      th, td { padding: 8px 10px; font-size: 0.8rem; }
+      th, td { padding: 6px 8px; font-size: 0.75rem; }
       .toolbar { flex-direction: column; }
+      .stats { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .stats .stat-card { min-width: 0; }
+      .stat-number { font-size: 1.4rem; }
+      .stat-label { font-size: 0.55rem; }
+      .filter-bar input, .filter-bar select { font-size: 0.8rem; padding: 8px; }
     }
   </style>
 </head>
@@ -294,8 +299,8 @@
     <div class="tab-panel" id="panel-confirmaciones">
       <div class="stats">
         <div class="stat-card inv"><div class="stat-number" id="stat-inv">-</div><div class="stat-label">Invitaciones</div></div>
-        <div class="stat-card esperadas"><div class="stat-number" id="stat-esperadas">-</div><div class="stat-label">Personas Esperadas</div></div>
         <div class="stat-card confirmadas"><div class="stat-number" id="stat-confirmadas">-</div><div class="stat-label">Confirmadas</div></div>
+        <div class="stat-card esperadas"><div class="stat-number" id="stat-esperadas">-</div><div class="stat-label">Esperadas</div></div>
         <div class="stat-card pendientes"><div class="stat-number" id="stat-pendientes">-</div><div class="stat-label">Pendientes</div></div>
         <div class="stat-card no-asisten"><div class="stat-number" id="stat-no-asisten">-</div><div class="stat-label">No Asisten</div></div>
       </div>
@@ -352,8 +357,8 @@
   <!-- Footer fijo -->
   <footer class="site-footer-fixed">
     <a href="#" target="_blank" rel="noopener" class="footer-brand">
-        <img src="/src/assets/images/logo_ligth.svg" alt="AnDev" class="footer-logo">
-      <span>Desarrollado por <strong>AnDev</strong> &middot; Desarrollador FullStack con IA</span>
+        <img src="/src/assets/images/logo_dark.svg" alt="AnDev" class="footer-logo">
+      <span>Powered by <strong>AnDev</strong></span>
     </a>
   </footer>
 
