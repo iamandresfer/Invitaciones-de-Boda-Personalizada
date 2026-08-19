@@ -27,6 +27,56 @@
     }
     .site-footer-fixed .footer-brand:hover { color: #555; }
     .site-footer-fixed .footer-logo { height: 12px; width: auto; }
+
+    /* Hero date blanco */
+    .hero-date { color: #fff !important; }
+
+    /* Countdown con fondo acento */
+    .countdown-section {
+      background: linear-gradient(135deg, #3B4334 0%, #4a5642 100%);
+      color: #fff;
+      padding: 64px 0;
+    }
+    .countdown-section .section-subtitle { color: rgba(255,255,255,0.7); }
+    .countdown-section .section-title { color: #fff; }
+    .countdown-section .countdown-number { color: #C9A96E; }
+    .countdown-section .countdown-label { color: rgba(255,255,255,0.6); }
+
+    /* RSVP con fondo CTA */
+    .rsvp-section {
+      background: linear-gradient(135deg, #f5f0e6 0%, #ede5d5 100%);
+      padding: 64px 0;
+    }
+    .rsvp-section .section-title { color: #3B4334; }
+
+    /* Monograma: cursiva para iniciales, serifa para & */
+    .monogram-initials {
+      font-family: 'Great Vibes', cursive;
+      font-size: 3rem;
+      font-weight: 400;
+      color: #3B4334;
+    }
+    .monogram-ampersand {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      color: #C9A96E;
+      font-size: 2.5rem;
+      margin: 0 4px;
+    }
+
+    /* Mapa de Google */
+    .map-wrapper {
+      margin: 24px auto;
+      border-radius: 4px;
+      overflow: hidden;
+      max-width: 500px;
+      aspect-ratio: 16/10;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+    }
+    .map-wrapper iframe {
+      width: 100%; height: 100%; border: 0;
+    }
+
     .loading-screen {
       position: fixed; inset: 0; background: #FAFAF8;
       display: flex; align-items: center; justify-content: center;
@@ -117,6 +167,9 @@
           <p class="detail-place">Salon de Eventos</p>
           <a href="https://maps.google.com/?q=Santo+Domingo+Ecuador" target="_blank" rel="noopener" class="detail-maps">Ver en Google Maps</a>
         </div>
+        <div class="map-wrapper">
+          <iframe src="https://maps.google.com/maps?q=Santo+Domingo+Ecuador&t=&z=13&ie=UTF8&iwloc=&output=embed" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
       </div>
     </section>
 
@@ -164,7 +217,7 @@
     <section class="section closing-section fade-in" id="cierre">
       <div class="container">
         <p class="closing-thanks">Gracias, <span id="inv-closing-name"></span></p>
-        <div class="monogram">G<span class="monogram-ampersand">&amp;</span>J</div>
+        <div class="monogram"><span class="monogram-initials">G<span class="monogram-ampersand">&amp;</span>J</span></div>
         <p class="closing-date">08 &middot; 11 &middot; 2026</p>
       </div>
     </section>
