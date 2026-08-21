@@ -327,14 +327,13 @@
           <thead>
             <tr>
               <th>Nombre</th>
-              <th style="width:48px; text-align:center" title="Invitado + acompanantes asignados">Total</th>
-              <th style="width:56px; text-align:center" title="Personas que confirmaron venir">Confirmo</th>
+              <th style="width:60px; text-align:center" title="Personas que asisten / cupos totales">Asisten</th>
               <th>Estado</th>
               <th style="width:90px; text-align:center">Acciones</th>
             </tr>
           </thead>
           <tbody id="confirmaciones-pendientes">
-            <tr><td colspan="5" class="empty-msg">Selecciona la pestana para ver datos</td></tr>
+            <tr><td colspan="4" class="empty-msg">Selecciona la pestana para ver datos</td></tr>
           </tbody>
         </table>
       </div>
@@ -600,7 +599,7 @@
       }
       if (!pendientes.length) {
         subtitleP.style.display = "none";
-        tbodyP.innerHTML = '<tr><td colspan="5" class="empty-msg">' + (data.length ? 'Todos confirmaron!' : 'No hay invitados creados aun') + '</td></tr>';
+        tbodyP.innerHTML = '<tr><td colspan="4" class="empty-msg">' + (data.length ? 'Todos confirmaron!' : 'No hay invitados creados aun') + '</td></tr>';
       } else {
         subtitleP.style.display = "";
         var html = "";
@@ -628,10 +627,11 @@
       var escName = escHtml(m.nombre).replace(/'/g, "\\'");
       var btnAsisteDisabled = m.estado === "Confirmado" ? " disabled" : "";
       var btnNoDisabled = m.estado === "No asiste" ? " disabled" : "";
+      var cuposTotal = 1 + (m.adicionales || 0);
+      var asisten = m.estado === "Confirmado" ? (1 + (m.adicionalesConfirmados || 0)) + "/" + cuposTotal : "&mdash;";
       return "<tr>"
         + "<td>" + escHtml(m.nombre || "-") + "</td>"
-        + "<td style='text-align:center' title='Invitado + acompanantes asignados'>" + (1 + (m.adicionales || 0)) + "</td>"
-        + "<td style='text-align:center' title='Personas que confirmaron venir'>" + (m.estado === "Confirmado" ? (1 + (m.adicionalesConfirmados || 0)) : "&mdash;") + "</td>"
+        + "<td style='text-align:center' title='Personas que asisten / cupos totales'>" + asisten + "</td>"
         + "<td class='status-" + estadoClass + "'>" + m.estado + "</td>"
         + '<td><div class="actions-cell" style="justify-content:center">'
         + '<button class="btn-icon btn-icon-confirm"' + btnAsisteDisabled + ' onclick="toggleEstado(\'' + escName + '\', \'Confirmado\')" title="Confirmar asistencia"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>'
