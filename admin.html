@@ -327,13 +327,14 @@
           <thead>
             <tr>
               <th>Nombre</th>
-              <th style="width:40px; text-align:center">+</th>
+              <th style="width:48px; text-align:center" title="Invitado + acompanantes asignados">Total</th>
+              <th style="width:56px; text-align:center" title="Personas que confirmaron venir">Confirmo</th>
               <th>Estado</th>
               <th style="width:90px; text-align:center">Acciones</th>
             </tr>
           </thead>
           <tbody id="confirmaciones-pendientes">
-            <tr><td colspan="4" class="empty-msg">Selecciona la pestana para ver datos</td></tr>
+            <tr><td colspan="5" class="empty-msg">Selecciona la pestana para ver datos</td></tr>
           </tbody>
         </table>
       </div>
@@ -528,15 +529,20 @@
     // MERGE
     // ==========================================
     function mergeData() {
-      var rsvpMap = {};
+      var rsvpById = {};
+      var rsvpByName = {};
       for (var i = 0; i < allRespuestas.length; i++) {
-        var key = normalize(allRespuestas[i].nombre);
-        rsvpMap[key] = allRespuestas[i];
+        var r = allRespuestas[i];
+        if (r.invitado_id) {
+          rsvpById[r.invitado_id] = r;
+        } else {
+          rsvpByName[normalize(r.nombre)] = r;
+        }
       }
       allMerged = [];
       for (var j = 0; j < allInvitados.length; j++) {
         var inv = allInvitados[j];
-        var rsvp = rsvpMap[normalize(inv.nombre)];
+        var rsvp = rsvpById[inv.id] || rsvpByName[normalize(inv.nombre)];
         allMerged.push({
           id: inv.id,
           nombre: inv.nombre || "",
@@ -594,7 +600,7 @@
       }
       if (!pendientes.length) {
         subtitleP.style.display = "none";
-        tbodyP.innerHTML = '<tr><td colspan="4" class="empty-msg">' + (data.length ? 'Todos confirmaron!' : 'No hay invitados creados aun') + '</td></tr>';
+        tbodyP.innerHTML = '<tr><td colspan="5" class="empty-msg">' + (data.length ? 'Todos confirmaron!' : 'No hay invitados creados aun') + '</td></tr>';
       } else {
         subtitleP.style.display = "";
         var html = "";
@@ -624,7 +630,8 @@
       var btnNoDisabled = m.estado === "No asiste" ? " disabled" : "";
       return "<tr>"
         + "<td>" + escHtml(m.nombre || "-") + "</td>"
-        + "<td style='text-align:center'>" + (1 + (m.adicionales || 0)) + "</td>"
+        + "<td style='text-align:center' title='Invitado + acompanantes asignados'>" + (1 + (m.adicionales || 0)) + "</td>"
+        + "<td style='text-align:center' title='Personas que confirmaron venir'>" + (m.estado === "Confirmado" ? (1 + (m.adicionalesConfirmados || 0)) : "&mdash;") + "</td>"
         + "<td class='status-" + estadoClass + "'>" + m.estado + "</td>"
         + '<td><div class="actions-cell" style="justify-content:center">'
         + '<button class="btn-icon btn-icon-confirm"' + btnAsisteDisabled + ' onclick="toggleEstado(\'' + escName + '\', \'Confirmado\')" title="Confirmar asistencia"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>'
