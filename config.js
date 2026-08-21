@@ -16,7 +16,7 @@ const EVENTO = {
   mensajeNovios: "Los novios le invitan a usted a compartir un momento especial en nuestras vidas.",
   heroImage: "src/assets/images/hero.jpg",
   detailImage: "src/assets/images/detail.jpg",
-  urlBase: "https://gloria-y-juan.vercel.app",
+  urlBase: "https://invitaciones-de-boda-personalizada.vercel.app",
   rsvpEndpoint: "https://qtnfqejnmzikiobhmkmv.supabase.co/rest/v1/respuestas"
 };
 
