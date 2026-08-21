@@ -204,11 +204,19 @@
       <div class="container">
         <h2 class="section-title">Confirma tu Asistencia</h2>
         <form id="rsvp-form" class="rsvp-form">
+          <div id="rsvp-status" class="rsvp-status" style="display: none;"></div>
           <div class="form-group">
             <label for="rsvp-nombre">Nombre</label>
             <input type="text" id="rsvp-nombre" name="nombre" readonly>
           </div>
           <div class="form-group">
+            <label>Asistencia</label>
+            <div class="rsvp-radios" id="rsvp-radios">
+              <label class="checked"><input type="radio" name="asistencia" value="si" checked>Asistiré</label>
+              <label><input type="radio" name="asistencia" value="no">No podré asistir</label>
+            </div>
+          </div>
+          <div class="form-group" id="rsvp-adicionales-group">
             <label for="rsvp-adicionales">Cuantos acompanantes?</label>
             <select id="rsvp-adicionales" name="adicionales"></select>
           </div>
@@ -233,8 +241,8 @@
     <!-- Footer fijo -->
     <footer class="site-footer-fixed">
       <a href="#" target="_blank" rel="noopener" class="footer-brand">
-        <img src="/src/assets/images/logo_andev_dark.svg" alt="AnDev" class="footer-logo">
         <span>Powered by</span>
+        <img src="/src/assets/images/logo_andev_dark.svg" alt="AnDev" class="footer-logo">
       </a>
     </footer>
     <div style="height:48px;"></div>
@@ -250,7 +258,32 @@
     };
 
     var INVITADO = null;
+    var RESPUESTA_EXISTENTE = null;
     var EVENTO_FECHA = "2026-11-08";
+
+    function fetchConRetry(url, options) {
+      function attempt(n) {
+        return fetch(url, options).catch(function(err) {
+          if (n <= 1) throw err;
+          return new Promise(function(res) { setTimeout(res, 900); }).then(function() { return attempt(n - 1); });
+        });
+      }
+      return attempt(2);
+    }
+
+    function setAsistencia(valor) {
+      var radios = document.querySelectorAll('#rsvp-radios input[name="asistencia"]');
+      radios.forEach(function(r) {
+        r.checked = r.value === valor;
+        r.closest("label").classList.toggle("checked", r.checked);
+      });
+      toggleAdicionales();
+    }
+
+    function toggleAdicionales() {
+      var asistira = document.querySelector('#rsvp-radios input[name="asistencia"]:checked').value === "si";
+      document.getElementById("rsvp-adicionales-group").style.display = asistira ? "" : "none";
+    }
 
     var _logs = [];
     function log(msg) {
@@ -323,6 +356,9 @@
       document.getElementById("rsvp-nombre").value = INVITADO.nombre;
       document.getElementById("rsvp-adicionales").innerHTML = buildAdicionalesOptions(INVITADO.adicionales);
 
+      document.getElementById("rsvp-radios").addEventListener("change", toggleAdicionales);
+      toggleAdicionales();
+
       form.addEventListener("submit", function(e) {
         e.preventDefault();
         if (form.dataset.submitting === "true") return;
@@ -331,43 +367,38 @@
         var submitBtn = form.querySelector("button[type='submit']");
         submitBtn.disabled = true;
         submitBtn.textContent = "Enviando...";
+        document.getElementById("rsvp-error").style.display = "none";
 
-        var cuposVal = parseInt(document.getElementById("rsvp-adicionales").value, 10);
+        var asistira = document.querySelector('#rsvp-radios input[name="asistencia"]:checked').value === "si";
+        var cuposVal = asistira ? (parseInt(document.getElementById("rsvp-adicionales").value, 10) || 0) : 0;
+        var eraActualizacion = !!RESPUESTA_EXISTENTE;
 
-        log("Enviando RSVP: " + INVITADO.nombre + " (+" + cuposVal + " acompanantes)");
+        log("Enviando RSVP: " + INVITADO.nombre + (asistira ? " (+" + cuposVal + " acompanantes)" : " (no asiste)"));
 
-        fetch(SUPABASE_REST + '/invitados?slug=eq.' + encodeURIComponent(INVITADO.slug) + '&select=id', {
-          headers: HEADERS
+        fetchConRetry(SUPABASE_REST + '/respuestas?on_conflict=invitado_id', {
+          method: 'POST',
+          headers: Object.assign({}, HEADERS, { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=representation' }),
+          body: JSON.stringify({
+            invitado_id: INVITADO.id,
+            nombre: INVITADO.nombre,
+            adicionales_asignados: INVITADO.adicionales,
+            adicionales_confirmados: cuposVal,
+            estado: asistira ? "Confirmado" : "No asiste"
+          })
         })
-          .then(function(resp) {
-            if (!resp.ok) throw new Error("Error al buscar invitado: HTTP " + resp.status);
-            return resp.json();
-          })
-          .then(function(rows) {
-            if (!rows || !rows.length) throw new Error("Invitado no encontrado");
-            var invitadoId = rows[0].id;
-            log("Invitado ID: " + invitadoId);
-
-            return fetch(SUPABASE_REST + '/respuestas', {
-              method: 'POST',
-              headers: Object.assign({}, HEADERS, { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=representation' }),
-              body: JSON.stringify({
-                invitado_id: invitadoId,
-                nombre: INVITADO.nombre,
-                adicionales_asignados: INVITADO.adicionales,
-                adicionales_confirmados: cuposVal,
-                estado: cuposVal > 0 ? "Confirmado" : "No asiste"
-              })
-            });
-          })
           .then(function(resp) {
             if (!resp.ok) return resp.json().then(function(d) { throw new Error(d.message || "Error HTTP " + resp.status); });
             return resp.json();
           })
           .then(function(data) {
+            RESPUESTA_EXISTENTE = { estado: asistira ? "Confirmado" : "No asiste", adicionales_confirmados: cuposVal };
             log("RSVP registrado!");
+            var okEl = document.getElementById("rsvp-success");
+            okEl.textContent = eraActualizacion
+              ? "Actualizamos tu confirmacion. Gracias!"
+              : "Gracias por confirmar! Tu respuesta ha sido registrada.";
             document.getElementById("rsvp-form").style.display = "none";
-            document.getElementById("rsvp-success").style.display = "block";
+            okEl.style.display = "block";
           })
           .catch(function(err) {
             log("ERROR: " + err.message);
@@ -375,11 +406,35 @@
             submitBtn.disabled = false;
             submitBtn.textContent = "Confirmar Asistencia";
             var errEl = document.getElementById("rsvp-error");
-            errEl.textContent = "Error: " + err.message;
+            errEl.textContent = "No se pudo registrar tu confirmacion (" + err.message + "). Verifica tu conexion e intenta de nuevo.";
             errEl.style.display = "block";
-            setTimeout(function() { errEl.style.display = "none"; }, 8000);
           });
       });
+
+      checkExistingRespuesta();
+    }
+
+    function checkExistingRespuesta() {
+      if (!INVITADO || !INVITADO.id) return;
+      fetchConRetry(SUPABASE_REST + '/respuestas?invitado_id=eq.' + INVITADO.id + '&select=estado,adicionales_confirmados', { headers: HEADERS })
+        .then(function(r) { return r.ok ? r.json() : []; })
+        .then(function(rows) {
+          if (!rows || !rows.length) return;
+          RESPUESTA_EXISTENTE = rows[0];
+          var esConfirmado = RESPUESTA_EXISTENTE.estado === "Confirmado";
+          setAsistencia(esConfirmado ? "si" : "no");
+          if (esConfirmado) {
+            var sel = document.getElementById("rsvp-adicionales");
+            var v = parseInt(RESPUESTA_EXISTENTE.adicionales_confirmados, 10) || 0;
+            if (v >= 0 && v <= INVITADO.adicionales) sel.value = String(v);
+          }
+          var st = document.getElementById("rsvp-status");
+          st.textContent = esConfirmado
+            ? "Ya confirmaste tu asistencia (" + (RESPUESTA_EXISTENTE.adicionales_confirmados || 0) + " acompanantes). Puedes modificarla abajo."
+            : "Registramos que no podras asistir. Puedes modificarlo abajo.";
+          st.style.display = "block";
+        })
+        .catch(function(err) { log("Aviso: no se pudo verificar estado previo: " + err.message); });
     }
 
     // === INIT ===
@@ -389,7 +444,7 @@
       document.getElementById("error-screen").classList.remove("hidden");
     } else {
       log("Slug: " + slug);
-      fetch(SUPABASE_REST + '/invitados?slug=eq.' + encodeURIComponent(slug) + '&select=nombre,adicionales,slug', {
+      fetch(SUPABASE_REST + '/invitados?slug=eq.' + encodeURIComponent(slug) + '&select=id,nombre,adicionales,slug', {
         headers: HEADERS
       })
         .then(function(resp) { return resp.json(); })

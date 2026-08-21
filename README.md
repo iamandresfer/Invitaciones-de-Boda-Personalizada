@@ -60,7 +60,13 @@ npm run generar
 5. Deploy automatico en cada push
 6. URL: `https://tu-proyecto.vercel.app`
 
-## Configurar RSVP (Google Apps Script)
+## Configurar RSVP (Google Apps Script) — DADO DE BAJA
+
+> **IMPORTANTE (ago 2026):** El flujo RSVP por Google Sheets fue reemplazado por
+> **Supabase REST** (`invitacion.html` + `admin.html`). Si tenias un despliegue
+> activo de Apps Script, eliminalo en Google Apps Script > Tu proyecto >
+> Desplegar > Gestionar implementaciones > Archivar/Eliminar, para evitar dos
+> fuentes de verdad. Los pasos originales se conservan abajo solo como referencia.
 
 1. Crear un Google Sheet nuevo
 2. Crear una hoja llamada "Respuestas"

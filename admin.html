@@ -646,30 +646,24 @@
       if (!ok) return;
       try {
         var invitado = allInvitados.find(function(i) { return normalize(i.nombre) === normalize(nombre); });
-        var adicionalesAsignados = invitado ? (parseInt(invitado.adicionales) || 0) : 0;
+        if (!invitado || !invitado.id) throw new Error("Invitado sin ID en la base de datos");
+        var adicionalesAsignados = parseInt(invitado.adicionales) || 0;
         var adicionalesConfirmados = (nuevoEstado === 'Confirmado') ? adicionalesAsignados : 0;
-        var respuestas = await fetch(SUPABASE_REST + '/respuestas?nombre=eq.' + encodeURIComponent(nombre), {
-          headers: SB_HEADERS
-        }).then(function(r) { return r.json(); });
-        var payload = {
-          nombre: nombre,
-          adicionales_asignados: adicionalesAsignados,
-          adicionales_confirmados: adicionalesConfirmados,
-          estado: nuevoEstado,
-          invitado_id: invitado ? invitado.id : null
-        };
-        if (respuestas.length > 0) {
-          await fetch(SUPABASE_REST + '/respuestas?nombre=eq.' + encodeURIComponent(nombre), {
-            method: 'PATCH',
-            headers: SB_HEADERS,
-            body: JSON.stringify(payload)
-          });
-        } else {
-          await fetch(SUPABASE_REST + '/respuestas', {
-            method: 'POST',
-            headers: SB_HEADERS,
-            body: JSON.stringify(payload)
-          });
+        var res = await fetch(SUPABASE_REST + '/respuestas?on_conflict=invitado_id', {
+          method: 'POST',
+          headers: Object.assign({}, SB_HEADERS, { Prefer: 'resolution=merge-duplicates' }),
+          body: JSON.stringify({
+            invitado_id: invitado.id,
+            nombre: nombre,
+            adicionales_asignados: adicionalesAsignados,
+            adicionales_confirmados: adicionalesConfirmados,
+            estado: nuevoEstado
+          })
+        });
+        if (!res.ok) {
+          var d = {};
+          try { d = await res.json(); } catch (e) {}
+          throw new Error(d.message || ("HTTP " + res.status));
         }
         showToast("Estado actualizado", "success");
         loadAll();
@@ -782,11 +776,16 @@
           }
         } else if (id) {
           // Existing row — PATCH
-          await fetch(SUPABASE_REST + '/invitados?id=eq.' + id, {
+          var resUpd = await fetch(SUPABASE_REST + '/invitados?id=eq.' + id, {
             method: 'PATCH',
             headers: SB_HEADERS,
             body: JSON.stringify({ nombre: nombre, adicionales: adicionales, slug: slug })
           });
+          if (!resUpd.ok) {
+            var e = {};
+            try { e = await resUpd.json(); } catch (x) {}
+            throw new Error(e.message || ("HTTP " + resUpd.status));
+          }
           tr.setAttribute("data-slug", slug);
           tr.querySelectorAll("[data-slug]").forEach(function(b) { b.setAttribute("data-slug", slug); });
           var idx = allInvitados.findIndex(function(i) { return i.id === id; });
@@ -818,15 +817,16 @@
       if (!ok) return;
       if (id && id.indexOf("new-") !== 0) {
         try {
-          await fetch(SUPABASE_REST + '/invitados?id=eq.' + id, {
+          // El FK ON DELETE CASCADE elimina también su respuesta en el servidor.
+          var r2 = await fetch(SUPABASE_REST + '/invitados?id=eq.' + id, {
             method: 'DELETE',
             headers: SB_HEADERS
           });
-          await fetch(SUPABASE_REST + '/respuestas?invitado_id=eq.' + id, {
-            method: 'DELETE',
-            headers: SB_HEADERS
-          });
-        } catch (err) {}
+          if (!r2.ok) throw new Error("No se pudo borrar el invitado (HTTP " + r2.status + ")");
+        } catch (err) {
+          showToast("Error: " + err.message, "error");
+          return;
+        }
       }
       allInvitados = allInvitados.filter(function(i) { return i.id !== id; });
       renderInvitadosTable();
