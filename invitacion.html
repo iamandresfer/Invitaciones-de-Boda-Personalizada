@@ -28,7 +28,7 @@
       --serif: 'EB Garamond', Georgia, serif;
     }
 
-    /* Botón RSVP fijo - pill con texto (izquierda, elevado sobre footer) */
+    /* Botón RSVP fijo - pill blanco */
     .rsvp-fixed-btn {
       position: fixed;
       bottom: 72px;
@@ -36,9 +36,9 @@
       z-index: 100;
       padding: 14px 28px;
       border-radius: 999px;
-      background: var(--ink);
+      background: var(--white);
       border: 1px solid var(--gold);
-      color: var(--white);
+      color: var(--ink);
       font-family: var(--serif);
       font-size: 0.78rem;
       letter-spacing: 0.22em;
@@ -51,6 +51,7 @@
     .rsvp-fixed-btn:hover {
       background: var(--gold);
       border-color: var(--gold);
+      color: var(--white);
       transform: scale(1.04);
     }
     .rsvp-fixed-btn:focus-visible {
@@ -252,7 +253,7 @@
     }
     .count-block {
       width: 100%;
-      padding: 42px 24px 58px;
+      padding: 28px 24px 44px;
     }
     .count-date {
       font-size: 1.5rem;
@@ -818,8 +819,8 @@
       </div>
     </div>
     <div class="count-block">
-      <p class="kicker rv" style="--d:.75s">Faltan</p>
-      <p class="count-date rv" style="--d:.85s">9 de Octubre, 2026</p>
+      <p class="count-date rv" style="--d:.75s">09 de Octubre, 2026</p>
+      <p class="kicker rv" style="--d:.85s">Faltan</p>
       <div class="count-row rv" style="--d:.95s">
         <div class="cd-item">
           <span class="cd-num" id="cd-days">00</span>
@@ -848,7 +849,8 @@
     <figure class="blessing-photo photo-rv" style="--d:.15s">
       <img src="/src/assets/images/01.png" alt="Gloria y Juan José">
     </figure>
-    <p class="bless-title rv" style="--d:.32s">Con la bendición de Dios y el amor de nuestros padres,</p>
+    <p class="bless-title rv" style="--d:.32s">Con la bendición de Dios</p>
+    <p class="bless-title rv" style="--d:.38s">y el amor de nuestros padres,</p>
     <p class="parents rv" style="--d:.45s">
       Ángel Valarezo &amp; Elcia Garófalo<br>
       Carlos Navas &amp; Angela Guerrero
@@ -858,7 +860,7 @@
   <!-- Página 3 · Foto full frame -->
   <section class="slide transition">
     <span class="page-num on-photo">03</span>
-    <img src="/src/assets/images/02.png" alt="Gloria y Juan José" style="object-position: 50% 35%;">
+    <img src="/src/assets/images/02.png" alt="Gloria y Juan José" style="object-position: 65% 35%;">
   </section>
 
   <!-- Página 4 · El Gran Día — ubicaciones -->
@@ -965,8 +967,8 @@
     </div>
     <h2 class="script-title rv" style="--d:.12s">Vestimenta</h2>
     <hr class="gold-rule rv" style="margin-bottom: 22px; --d:.2s;">
-    <p class="dress-main rv" style="--d:.32s">Vestimenta formal</p>
-    <p class="dress-note rv" style="--d:.45s">Una celebración para adultos; respetuosamente, solo mayores de 18 años.</p>
+    <p class="dress-main rv" style="--d:.32s">Una celebración para adultos</p>
+    <p class="dress-note rv" style="--d:.45s">respetuosamente, solo mayores de 18 años.</p>
   </section>
 
   <!-- Página 8 · Obsequios (tipográfica) -->
@@ -977,12 +979,12 @@
     </div>
     <h2 class="script-title rv" style="--d:.12s">Obsequios</h2>
     <hr class="gold-rule rv" style="margin-bottom: 24px; --d:.2s;">
-    <p class="gifts-text rv" style="--d:.32s">Su presencia es nuestro mejor regalo, y quienes así lo deseen podrán contribuir a nuestro comienzo.</p>
     <p class="gifts-account rv" style="--d:.45s">
-      Cuenta de ahorros<br>
-      <strong>Banco Pichincha</strong><br>
-      2204885412<br>
-      <span style="font-size:13px; opacity:.85;">C.I. 1725374530</span>
+      BANCO PICHINCHA<br>
+      CUENTA DE AHORROS<br>
+      N°: 2204885412<br>
+      CI: 1725374530<br>
+      JUAN JOSÉ NAVAS GUERRERO
     </p>
   </section>
 
@@ -997,7 +999,7 @@
         <img src="/src/assets/images/IMG_5283.PNG" alt="Gloria y Juan José">
       </figure>
     </div>
-    <p class="closing-phrase rv" style="--d:.5s">&iexcl;Gracias por acompa&ntilde;arnos!</p>
+    <p class="closing-phrase rv" style="--d:.5s" id="closing-phrase">&iexcl;Gracias!</p>
   </section>
 
   <!-- Botón RSVP fijo -->
@@ -1361,6 +1363,8 @@
               else if(n===1) acompEl.textContent="+ 1 acompa\u00f1ante";
               else acompEl.textContent="+ "+n+" acompa\u00f1antes";
             }
+            var closingEl=document.getElementById("closing-phrase");
+            if(closingEl) closingEl.textContent="\u00a1Gracias! " + INVITADO.nombre;
 
             gateLoading.hidden = true;
 
