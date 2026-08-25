@@ -6,7 +6,7 @@ const https = require("https");
 const EVENTO = require("../config.js");
 
 const ROOT = path.resolve(__dirname, "..");
-const TEMPLATE_PATH = path.join(ROOT, "src", "template.html");
+const TEMPLATE_PATH = path.join(ROOT, "invitacion.html");
 const OUTPUT_DIR = path.join(ROOT, "invitacion");
 
 const SUPABASE_URL = "https://qtnfqejnmzikiobhmkmv.supabase.co";
