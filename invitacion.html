@@ -28,39 +28,35 @@
       --serif: 'EB Garamond', Georgia, serif;
     }
 
-    /* Botón RSVP fijo en esquina inferior izquierda */
+    /* Botón RSVP fijo - pill con texto */
     .rsvp-fixed-btn {
       position: fixed;
       bottom: 24px;
-      left: 24px;
+      left: 50%;
+      transform: translateX(-50%);
       z-index: 100;
-      width: 64px;
-      height: 64px;
-      border-radius: 50%;
+      padding: 14px 32px;
+      border-radius: 999px;
       background: var(--ink);
-      border: 2px solid var(--gold);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      border: 1px solid var(--gold);
+      color: var(--white);
+      font-family: var(--serif);
+      font-size: 0.78rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
       cursor: pointer;
       box-shadow: 0 8px 32px rgba(43, 43, 43, 0.25);
       transition: transform 0.2s, background-color 0.2s, border-color 0.2s;
+      white-space: nowrap;
     }
     .rsvp-fixed-btn:hover {
-      transform: scale(1.08);
       background: var(--gold);
       border-color: var(--gold);
+      transform: translateX(-50%) scale(1.04);
     }
-    .rsvp-fixed-btn:hover .monogram-svg { fill: var(--ink); }
     .rsvp-fixed-btn:focus-visible {
       outline: 2px solid var(--gold);
       outline-offset: 3px;
-    }
-    .rsvp-fixed-btn .monogram-svg {
-      width: 36px;
-      height: 36px;
-      fill: var(--white);
-      transition: fill 0.2s;
     }
 
     /* Botón música flotante esquina superior derecha */
@@ -99,85 +95,6 @@
     }
     .music-toggle.playing svg { color: var(--gold); }
 
-    /* Carrusel para página 3 */
-    .carousel {
-      position: relative;
-      width: min(520px, 92vw);
-      aspect-ratio: 4 / 5;
-      overflow: hidden;
-      border-radius: 4px;
-      box-shadow: 0 18px 44px rgba(43, 43, 43, 0.15);
-    }
-    .carousel-track {
-      display: flex;
-      width: 100%;
-      height: 100%;
-      transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
-    }
-    .carousel-slide {
-      flex: 0 0 100%;
-      width: 100%;
-      height: 100%;
-    }
-    .carousel-slide img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .carousel-btn {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: rgba(253, 253, 252, 0.9);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(176, 141, 87, 0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: var(--ink);
-      transition: background-color 0.2s, border-color 0.2s, color 0.2s;
-      z-index: 10;
-    }
-    .carousel-btn:hover {
-      background: var(--ink);
-      color: var(--white);
-      border-color: var(--gold);
-    }
-    .carousel-btn:focus-visible {
-      outline: 2px solid var(--gold);
-      outline-offset: 3px;
-    }
-    .carousel-btn.prev { left: 16px; }
-    .carousel-btn.next { right: 16px; }
-    .carousel-btn svg { width: 20px; height: 20px; }
-    .carousel-dots {
-      position: absolute;
-      bottom: 16px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 8px;
-      z-index: 10;
-    }
-    .carousel-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: rgba(253, 253, 252, 0.7);
-      border: 1px solid rgba(176, 141, 87, 0.3);
-      cursor: pointer;
-      transition: background-color 0.2s, transform 0.2s;
-    }
-    .carousel-dot.active {
-      background: var(--gold);
-      border-color: var(--gold);
-      transform: scale(1.2);
-    }
-
     /* Texto acompañantes en portada */
     .hero-acompanantes {
       font-family: var(--serif);
@@ -197,11 +114,9 @@
     @media (max-width: 480px) {
       .rsvp-fixed-btn {
         bottom: 16px;
-        left: 16px;
-        width: 56px;
-        height: 56px;
+        padding: 12px 22px;
+        font-size: 0.7rem;
       }
-      .rsvp-fixed-btn .monogram-svg { width: 30px; height: 30px; }
       .music-toggle {
         top: 16px;
         right: 16px;
@@ -209,9 +124,6 @@
         height: 44px;
       }
       .music-toggle svg { width: 20px; height: 20px; }
-      .carousel-btn { width: 40px; height: 40px; }
-      .carousel-btn.prev { left: 8px; }
-      .carousel-btn.next { right: 8px; }
       .hero-acompanantes { font-size: 0.95rem; }
     }
 
@@ -875,12 +787,12 @@
 </head>
 <body>
 
-  <!-- Botón música flotante -->
-  <button type="button" class="music-toggle" id="music-toggle" aria-label="Activar/desactivar música" aria-pressed="false">
+  <!-- Botón música flotante - Tan Enamorados (Montaner) -->
+  <button type="button" class="music-toggle" id="music-toggle" aria-label="Activar/desactivar música" aria-pressed="false" title="Tan Enamorados - Ricardo Montaner">
     <svg class="music-icon-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
     <svg class="music-icon-pause" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
   </button>
-  <audio id="bg-music" loop muted preload="auto"><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg"></audio>
+  <audio id="bg-music" loop preload="auto"><source src="/src/assets/audio/tan-enamorados-montaner.wav" type="audio/wav"></audio>
 
   <!-- Pantalla de carga -->
   <div class="gate" id="gate-loading">
@@ -943,21 +855,10 @@
     </p>
   </section>
 
-  <!-- Página 3 · Foto de transición -->
+  <!-- Página 3 · Foto full frame -->
   <section class="slide transition">
     <span class="page-num on-photo">03</span>
-    <div class="carousel" id="main-carousel">
-      <div class="carousel-track">
-        <div class="carousel-slide active"><img src="/src/assets/images/02.png" alt="Gloria y Juan José"></div>
-        <div class="carousel-slide"><img src="/src/assets/images/03.png" alt="Gloria y Juan José"></div>
-        <div class="carousel-slide"><img src="/src/assets/images/04.jpg" alt="Gloria y Juan José"></div>
-        <div class="carousel-slide"><img src="/src/assets/images/IMG_1505.jpg" alt="Gloria y Juan José"></div>
-        <div class="carousel-slide"><img src="/src/assets/images/IMG_3029.jpg" alt="Gloria y Juan José"></div>
-      </div>
-      <button type="button" class="carousel-btn prev" aria-label="Anterior">&#10094;</button>
-      <button type="button" class="carousel-btn next" aria-label="Siguiente">&#10095;</button>
-      <div class="carousel-dots" id="carousel-dots"></div>
-    </div>
+    <img src="/src/assets/images/02.png" alt="Gloria y Juan José">
   </section>
 
   <!-- Página 4 · El Gran Día — ubicaciones -->
@@ -1100,9 +1001,7 @@
   </section>
 
   <!-- Botón RSVP fijo -->
-  <button type="button" class="rsvp-fixed-btn" id="rsvp-fixed-btn" aria-label="Confirmar asistencia">
-    <img src="/src/assets/images/SVG/monogram.svg" alt="" aria-hidden="true" style="width:28px;height:28px;">
-  </button>
+  <button type="button" class="rsvp-fixed-btn" id="rsvp-fixed-btn" aria-label="Confirmar asistencia">Confirmar asistencia</button>
 
   <!-- Footer -->
   <footer class="site-footer-fixed">
@@ -1316,48 +1215,7 @@
         updateIcons();
       })();
 
-      // Carousel
-      (function(){
-        var track=document.querySelector("#main-carousel .carousel-track");
-        if(!track) return;
-        var slidesC=Array.prototype.slice.call(track.children);
-        var btnPrevC=document.querySelector("#main-carousel .carousel-btn.prev");
-        var btnNextC=document.querySelector("#main-carousel .carousel-btn.next");
-        var dotsWrap=document.getElementById("carousel-dots");
-        var cur=0; var timer=null;
-        function renderDots(){
-          if(!dotsWrap) return;
-          dotsWrap.innerHTML="";
-          slidesC.forEach(function(_,i){
-            var d=document.createElement("button");
-            d.type="button"; d.className="carousel-dot"+(i===cur?" active":"");
-            d.setAttribute("aria-label","Ir a foto "+(i+1));
-            d.addEventListener("click", function(){ go(i); resetAuto(); });
-            dotsWrap.appendChild(d);
-          });
-        }
-        function go(n){
-          slidesC[cur].classList.remove("active");
-          var dots=dotsWrap?dotsWrap.children:null;
-          if(dots&&dots[cur]) dots[cur].classList.remove("active");
-          cur=(n+slidesC.length)%slidesC.length;
-          slidesC[cur].classList.add("active");
-          if(dots&&dots[cur]) dots[cur].classList.add("active");
-        }
-        function next(){ go(cur+1); }
-        function prev(){ go(cur-1); }
-        function startAuto(){ timer=setInterval(next, 3500); }
-        function resetAuto(){ clearInterval(timer); startAuto(); }
-        if(btnNextC) btnNextC.addEventListener("click", function(){ next(); resetAuto(); });
-        if(btnPrevC) btnPrevC.addEventListener("click", function(){ prev(); resetAuto(); });
-        renderDots(); startAuto();
-        var startX=0;
-        track.addEventListener("touchstart", function(e){ startX=e.touches[0].clientX; }, {passive:true});
-        track.addEventListener("touchend", function(e){
-          var dx=e.changedTouches[0].clientX-startX;
-          if(Math.abs(dx)>40){ if(dx<0) next(); else prev(); resetAuto(); }
-        });
-      })();
+      // Página 3 ahora es foto única full-frame, sin carrusel
 
       // Modal
       var modal = document.getElementById("rsvp-modal");
