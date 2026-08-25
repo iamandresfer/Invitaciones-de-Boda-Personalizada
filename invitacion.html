@@ -28,11 +28,12 @@
       --serif: 'EB Garamond', Georgia, serif;
     }
 
-    /* Botón RSVP fijo - pill blanco */
+    /* Botón RSVP fijo - pill blanco centrado */
     .rsvp-fixed-btn {
       position: fixed;
       bottom: 72px;
-      left: 24px;
+      left: 50%;
+      transform: translateX(-50%);
       z-index: 100;
       padding: 14px 28px;
       border-radius: 999px;
@@ -44,7 +45,6 @@
       letter-spacing: 0.22em;
       text-transform: uppercase;
       cursor: pointer;
-      box-shadow: 0 8px 32px rgba(43, 43, 43, 0.25);
       transition: transform 0.2s, background-color 0.2s, border-color 0.2s;
       white-space: nowrap;
     }
@@ -52,7 +52,7 @@
       background: var(--gold);
       border-color: var(--gold);
       color: var(--white);
-      transform: scale(1.04);
+      transform: translateX(-50%) scale(1.04);
     }
     .rsvp-fixed-btn:focus-visible {
       outline: 2px solid var(--gold);
@@ -114,7 +114,8 @@
     @media (max-width: 480px) {
       .rsvp-fixed-btn {
         bottom: 62px;
-        left: 16px;
+        left: 50%;
+        transform: translateX(-50%);
         padding: 12px 20px;
         font-size: 0.7rem;
       }
@@ -253,7 +254,7 @@
     }
     .count-block {
       width: 100%;
-      padding: 28px 24px 44px;
+      padding: 28px 24px 140px;
     }
     .count-date {
       font-size: 1.5rem;
@@ -615,7 +616,7 @@
     .slide-nav {
       position: fixed;
       right: 16px;
-      bottom: 58px;
+      bottom: 88px;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -624,11 +625,11 @@
     .slide-nav button {
       width: 44px; height: 44px;
       border-radius: 50%;
-      border: 1px solid rgba(176, 141, 87, 0.28);
-      background: rgba(253, 253, 252, 0.55);
+      border: 1px solid rgba(176, 141, 87, 0.18);
+      background: rgba(253, 253, 252, 0.35);
       backdrop-filter: blur(14px) saturate(140%);
       -webkit-backdrop-filter: blur(14px) saturate(140%);
-      color: rgba(43, 43, 43, 0.42);
+      color: rgba(43, 43, 43, 0.28);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -860,7 +861,7 @@
   <!-- Página 3 · Foto full frame -->
   <section class="slide transition">
     <span class="page-num on-photo">03</span>
-    <img src="/src/assets/images/02.png" alt="Gloria y Juan José" style="object-position: 65% 35%;">
+    <img src="/src/assets/images/02.png" alt="Gloria y Juan José" style="object-position: 10%;">
   </section>
 
   <!-- Página 4 · El Gran Día — ubicaciones -->
@@ -991,6 +992,7 @@
 <!-- Página 10 · Cierre -->
   <section class="slide">
     <span class="page-num">09</span>
+    <p class="closing-phrase rv" style="--d:.5s;padding-bottom: 16px;" id="closing-phrase">¡Te Esperamos!</p>
     <div class="closing-photos">
       <figure class="photo-rv" style="--d:.08s">
         <img src="/src/assets/images/IMG_4963.jpg" alt="Gloria y Juan José">
@@ -999,7 +1001,6 @@
         <img src="/src/assets/images/IMG_5283.PNG" alt="Gloria y Juan José">
       </figure>
     </div>
-    <p class="closing-phrase rv" style="--d:.5s" id="closing-phrase">&iexcl;Gracias!</p>
   </section>
 
   <!-- Botón RSVP fijo -->
@@ -1009,7 +1010,7 @@
   <footer class="site-footer-fixed">
     <a href="#" target="_blank" rel="noopener" class="footer-brand">
       <span>Powered by</span>
-      <img src="/src/assets/images/logo_andev_dark.svg" alt="AnDev" class="footer-logo">
+      <img src="/src/assets/images/SVG/logo_andev_dark.svg" alt="AnDev" class="footer-logo">
     </a>
   </footer>
 
@@ -1363,8 +1364,6 @@
               else if(n===1) acompEl.textContent="+ 1 acompa\u00f1ante";
               else acompEl.textContent="+ "+n+" acompa\u00f1antes";
             }
-            var closingEl=document.getElementById("closing-phrase");
-            if(closingEl) closingEl.textContent="\u00a1Gracias! " + INVITADO.nombre;
 
             gateLoading.hidden = true;
 
