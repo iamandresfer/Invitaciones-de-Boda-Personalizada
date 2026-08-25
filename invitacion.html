@@ -28,14 +28,13 @@
       --serif: 'EB Garamond', Georgia, serif;
     }
 
-    /* Botón RSVP fijo - pill con texto */
+    /* Botón RSVP fijo - pill con texto (izquierda, elevado sobre footer) */
     .rsvp-fixed-btn {
       position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
+      bottom: 72px;
+      left: 24px;
       z-index: 100;
-      padding: 14px 32px;
+      padding: 14px 28px;
       border-radius: 999px;
       background: var(--ink);
       border: 1px solid var(--gold);
@@ -52,7 +51,7 @@
     .rsvp-fixed-btn:hover {
       background: var(--gold);
       border-color: var(--gold);
-      transform: translateX(-50%) scale(1.04);
+      transform: scale(1.04);
     }
     .rsvp-fixed-btn:focus-visible {
       outline: 2px solid var(--gold);
@@ -113,8 +112,9 @@
 
     @media (max-width: 480px) {
       .rsvp-fixed-btn {
-        bottom: 16px;
-        padding: 12px 22px;
+        bottom: 62px;
+        left: 16px;
+        padding: 12px 20px;
         font-size: 0.7rem;
       }
       .music-toggle {
@@ -792,7 +792,7 @@
     <svg class="music-icon-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
     <svg class="music-icon-pause" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
   </button>
-  <audio id="bg-music" loop preload="auto"><source src="/src/assets/audio/tan-enamorados-montaner.wav" type="audio/wav"></audio>
+  <audio id="bg-music" loop preload="auto" autoplay><source src="/src/assets/audio/tan-enamorados-montaner.wav" type="audio/wav"></audio>
 
   <!-- Pantalla de carga -->
   <div class="gate" id="gate-loading">
@@ -809,7 +809,7 @@
   <!-- Página 1 · Portada + countdown -->
   <section class="slide intro">
     <div class="hero-full photo-rv" style="--d:0s">
-      <img src="/src/assets/images/principal_hero.jpg" alt="Gloria y Juan José">
+      <img src="/src/assets/images/principal_hero.png" alt="Gloria y Juan José">
       <div class="hero-overlay"></div>
       <div class="hero-content">
         <p class="hero-invite rv" style="--d:.4s">Gloria &amp; Juan te invitan</p>
@@ -858,7 +858,7 @@
   <!-- Página 3 · Foto full frame -->
   <section class="slide transition">
     <span class="page-num on-photo">03</span>
-    <img src="/src/assets/images/02.png" alt="Gloria y Juan José">
+    <img src="/src/assets/images/02.png" alt="Gloria y Juan José" style="object-position: 50% 35%;">
   </section>
 
   <!-- Página 4 · El Gran Día — ubicaciones -->
@@ -1189,7 +1189,7 @@
         document.getElementById("rsvp-adicionales-group").style.display = asistira ? "" : "none";
       }
 
-      // Musica
+      // Musica - autoplay al abrir
       (function(){
         var btn=document.getElementById("music-toggle");
         var audio=document.getElementById("bg-music");
@@ -1201,17 +1201,26 @@
           if(playIcon) playIcon.style.display=isPlaying?"none":"block";
           if(pauseIcon) pauseIcon.style.display=isPlaying?"block":"none";
           btn.setAttribute("aria-pressed", isPlaying?"true":"false");
+          if(isPlaying) btn.classList.add("playing"); else btn.classList.remove("playing");
+        }
+        function tryPlay(){
+          var p=audio.play();
+          if(p && p.then) p.then(function(){ isPlaying=true; updateIcons(); }).catch(function(){ isPlaying=false; updateIcons(); });
         }
         btn.addEventListener("click", function(){
           if(isPlaying){ audio.pause(); isPlaying=false; updateIcons(); }
-          else { audio.muted=false; audio.play().then(function(){ isPlaying=true; updateIcons(); }).catch(function(){}); }
+          else { tryPlay(); }
         });
-        document.addEventListener("click", function initOnce(){
-          if(isPlaying) return;
-          audio.muted=false;
-          audio.play().then(function(){ isPlaying=true; updateIcons(); }).catch(function(){});
-          document.removeEventListener("click", initOnce);
-        }, {once:true});
+        // Intento autoplay inmediato (navegador puede bloquearlo)
+        audio.volume=0.85;
+        tryPlay();
+        window.addEventListener("load", tryPlay);
+        setTimeout(tryPlay, 800);
+        // Fallback: cualquier interacción lo inicia si fue bloqueado
+        var onFirstInteract=function(){ if(!isPlaying) tryPlay(); };
+        document.addEventListener("click", onFirstInteract, {once:true});
+        document.addEventListener("touchstart", onFirstInteract, {once:true, passive:true});
+        document.addEventListener("keydown", onFirstInteract, {once:true});
         updateIcons();
       })();
 
