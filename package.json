@@ -5,5 +5,8 @@
   "scripts": {
     "preview": "npx serve ."
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "sharp": "^0.35.4"
+  }
 }
