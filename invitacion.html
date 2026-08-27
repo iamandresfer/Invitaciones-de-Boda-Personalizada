@@ -604,6 +604,8 @@
       margin-top: -84px;
       border: 8px solid var(--paper);
     }
+    .closing-photos[style*="grid"] figure { width:100%; margin-top:0; border:none; align-self:stretch; }
+    .closing-photos[style*="grid"] figure:last-child { border:none; margin-top:0; align-self:stretch; }
     .closing-photos img { width: 100%; height: 100%; object-fit: cover; }
     .closing-media { width: 100%; max-width: 560px; display: flex; flex-direction: column; align-items: center; gap: 18px; margin-bottom: 24px; }
     .closing-video { width: 100%; max-width: 520px; aspect-ratio: 16 / 9; border-radius: 8px; object-fit: cover; background: #000; box-shadow: 0 18px 44px rgba(43,43,43,0.12); }
@@ -815,7 +817,7 @@
       <img src="/src/assets/images/principal_hero.png" alt="Gloria y Juan José">
       <div class="hero-overlay"></div>
       <div class="hero-content">
-        <h1 class="hero-name-script rv" style="--d:.4s">GLORIA Y JUAN JOSÉ</h1>
+        <p class="hero-invite rv" style="--d:.4s; font-size:1.05rem; letter-spacing:0.28em;">GLORIA Y JUAN JOSÉ</p>
         <p class="hero-invite rv" style="--d:.5s">TE INVITAN</p>
         <h1 class="hero-name-script rv" style="--d:.65s" id="inv-hero-name">Nombre del Invitado</h1>
         <p class="hero-acompanantes rv" style="--d:.75s; font-size:1.25rem;" id="inv-acompanantes"></p>
@@ -970,7 +972,7 @@
     </div>
     <h2 class="script-title rv" style="--d:.12s">Vestimenta</h2>
     <hr class="gold-rule rv" style="margin-bottom: 22px; --d:.2s;">
-    <p class="dress-main rv" style="--d:.32s">Código de Vestimenta: Formal</p>
+    <p class="gifts-text rv" style="--d:.32s; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;">CÓDIGO DE VESTIMENTA: FORMAL</p>
     <p class="dress-main rv" style="--d:.38s; font-size:1.1rem;">Una Celebración para Adultos</p>
     <p class="dress-note rv" style="--d:.44s;">respetuosamente</p>
     <p class="dress-note rv" style="--d:.50s;">solo mayores de 18 años</p>
@@ -1002,21 +1004,33 @@
     <span class="page-num">09</span>
     <p class="closing-phrase rv" style="--d:.5s;padding-bottom: 16px;" id="closing-phrase">¡Te Esperamos!</p>
     <div class="closing-media">
-      <video class="closing-video photo-rv" style="--d:.08s" playsinline muted loop controls preload="metadata" poster="/src/assets/images/IMG_4963.jpg">
+      <video class="closing-video photo-rv" style="--d:.08s" playsinline muted loop autoplay preload="metadata" poster="/src/assets/images/video-poster.webp" id="closing-video">
         <source src="/src/assets/video/ceremonia.mp4" type="video/mp4">
         Tu navegador no soporta video.
       </video>
-      <div class="closing-photos" style="width:100%;">
+      <div class="closing-photos" style="width:100%; display:grid; grid-template-columns:1fr 1fr; gap:12px;">
         <figure class="photo-rv" style="--d:.18s">
           <picture>
             <source srcset="/src/assets/images/IMG_4963-400w.webp 400w, /src/assets/images/IMG_4963-800w.webp 800w, /src/assets/images/IMG_4963-1200w.webp 1200w" type="image/webp">
-            <img src="/src/assets/images/IMG_4963.jpg" alt="Gloria y Juan José" loading="lazy" width="800" height="1000">
+            <img src="/src/assets/images/IMG_4963.jpg" alt="Gloria y Juan José" loading="lazy" width="800" height="1000" style="width:100%; height:100%; object-fit:cover; aspect-ratio:4/5; border-radius:4px;">
           </picture>
         </figure>
         <figure class="photo-rv" style="--d:.28s">
           <picture>
             <source srcset="/src/assets/images/IMG_5283-400w.webp 400w, /src/assets/images/IMG_5283-800w.webp 800w, /src/assets/images/IMG_5283-1200w.webp 1200w" type="image/webp">
-            <img src="/src/assets/images/IMG_5283.PNG" alt="Gloria y Juan José" loading="lazy" width="800" height="1000">
+            <img src="/src/assets/images/IMG_5283.PNG" alt="Gloria y Juan José" loading="lazy" width="800" height="1000" style="width:100%; height:100%; object-fit:cover; aspect-ratio:4/5; border-radius:4px;">
+          </picture>
+        </figure>
+        <figure class="photo-rv" style="--d:.38s">
+          <picture>
+            <source srcset="/src/assets/images/IMG_4072-400w.webp 400w, /src/assets/images/IMG_4072-800w.webp 800w, /src/assets/images/IMG_4072-1200w.webp 1200w" type="image/webp">
+            <img src="/src/assets/images/IMG_4072.jpg" alt="Gloria y Juan José" loading="lazy" width="800" height="1000" style="width:100%; height:100%; object-fit:cover; aspect-ratio:4/5; border-radius:4px;">
+          </picture>
+        </figure>
+        <figure class="photo-rv" style="--d:.48s">
+          <picture>
+            <source srcset="/src/assets/images/IMG_1505-400w.webp 400w, /src/assets/images/IMG_1505-800w.webp 800w, /src/assets/images/IMG_1505-1200w.webp 1200w" type="image/webp">
+            <img src="/src/assets/images/IMG_1505.jpg" alt="Gloria y Juan José" loading="lazy" width="800" height="1000" style="width:100%; height:100%; object-fit:cover; aspect-ratio:4/5; border-radius:4px;">
           </picture>
         </figure>
       </div>
@@ -1154,6 +1168,20 @@
 
       btnPrev.addEventListener("click", function() { goTo(current - 1); });
       btnNext.addEventListener("click", function() { goTo(current + 1); });
+
+      // Video autoplay al llegar a sección 9
+      (function(){
+        var v=document.getElementById('closing-video');
+        if(!v) return;
+        var slide=v.closest('.slide');
+        if(!slide) return;
+        var obs=new IntersectionObserver(function(entries){
+          entries.forEach(function(e){
+            if(e.isIntersecting){ v.play().catch(function(){}); } else { v.pause(); }
+          });
+        }, {threshold:0.45});
+        obs.observe(slide);
+      })();
 
       // ==========================================
       // RSVP real (Supabase)
