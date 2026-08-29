@@ -210,11 +210,16 @@
       line-height: 1.15;
       color: #fff;
     }
-    .scroll-down {
+    .scroll-down-wrap {
       position: absolute;
+      left: 0; right: 0;
       bottom: 40px;
-      left: 50%;
-      transform: translateX(-50%);
+      display: flex;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .scroll-down {
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -225,8 +230,7 @@
       text-transform: uppercase;
       font-family: var(--serif);
       animation: scrollFade 2.5s ease-in-out infinite;
-      pointer-events: none;
-      z-index: 2;
+      pointer-events: auto;
     }
     .scroll-down .scroll-chevron {
       width: 28px;
@@ -242,7 +246,8 @@
       50% { transform: translateY(6px); }
     }
     @media (max-width: 480px) {
-      .scroll-down { bottom: 28px; font-size: 0.6rem; }
+      .scroll-down-wrap { bottom: 28px; }
+      .scroll-down { font-size: 0.6rem; }
       .scroll-down .scroll-chevron { width: 24px; height: 24px; }
     }
     .count-block {
@@ -771,9 +776,11 @@
         <p class="hero-invite rv" style="--d:.5s">TE INVITAN</p>
         <h1 class="hero-name-script rv" style="--d:.65s" id="inv-hero-name">Nombre del Invitado</h1>
         <p class="hero-acompanantes rv" style="--d:.75s; font-size:1.25rem;" id="inv-acompanantes"></p>
-        <div class="scroll-down rv" style="--d:1s; pointer-events: auto;" id="scroll-down">
-          <span class="scroll-text">Desliza para descubrir</span>
-          <svg class="scroll-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+        <div class="scroll-down-wrap">
+          <div class="scroll-down rv" style="--d:1s" id="scroll-down">
+            <span class="scroll-text">Desliza para descubrir</span>
+            <svg class="scroll-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
         </div>
       </div>
     </div>
@@ -1082,7 +1089,6 @@
       // Scroll-down CTA: al hacer clic, desliza a la siguiente sección
       var scrollDown = document.getElementById('scroll-down');
       if (scrollDown) {
-        scrollDown.style.pointerEvents = 'auto';
         scrollDown.addEventListener('click', function() {
           var intro = document.querySelector('.slide.intro');
           if (intro) {
