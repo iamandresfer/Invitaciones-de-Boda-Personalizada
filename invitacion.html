@@ -1168,45 +1168,50 @@
         document.getElementById("rsvp-adicionales-group").style.display = asistira ? "" : "none";
       }
 
-      // Musica - autoplay robusto: muted + unmute en primera interacción (sin botón)
+      // Musica - autoplay robusto: muted + unmute en primera interacción válida (sin botón)
       (function(){
         var audio=document.getElementById("bg-music");
         if(!audio) return;
         var isPlaying=false;
         var audioCtx=null;
+        var hasInteracted=false;
         function unlockAudio(){
+          if(hasInteracted) return;
           if(audioCtx && audioCtx.state==="suspended") audioCtx.resume();
-          if(audio.muted && !isPlaying){
+          if(audio.muted){
             audio.muted=false;
             var p=audio.play();
-            if(p && p.then) p.then(function(){ isPlaying=true; }).catch(function(){ isPlaying=false; });
+            if(p && p.then) p.then(function(){ isPlaying=true; hasInteracted=true; }).catch(function(){ isPlaying=false; });
+          } else {
+            hasInteracted=true;
           }
         }
         function tryPlay(){
           var p=audio.play();
           if(p && p.then) p.then(function(){ isPlaying=true; }).catch(function(){ isPlaying=false; });
         }
-        // Autoplay: muted + unmute en primera interacción (estándar moderno)
+        // Autoplay: muted al cargar
         audio.volume=0.85;
         audio.muted=true;
         tryPlay();
-        // Desbloquear AudioContext en primera interacción (click/touch/tecla)
-        var unlockOnce=function(){
+        // Desbloquear en primera interacción VÁLIDA (click, touchend, keydown)
+        // Usamos touchend (no touchstart) que sí cuenta como user activation
+        function onUserActivation(){
+          if(hasInteracted) return;
           unlockAudio();
-          document.removeEventListener("click", unlockOnce);
-          document.removeEventListener("touchstart", unlockOnce);
-          document.removeEventListener("keydown", unlockOnce);
-          document.removeEventListener("visibilitychange", unlockOnce);
-        };
-        document.addEventListener("click", unlockOnce, {once:true});
-        document.addEventListener("touchstart", unlockOnce, {once:true, passive:true});
-        document.addEventListener("keydown", unlockOnce, {once:true});
+        }
+        document.addEventListener("click", onUserActivation, {passive:true});
+        document.addEventListener("touchend", onUserActivation, {passive:true});
+        document.addEventListener("keydown", onUserActivation, {passive:true});
+        // Reintento al volver a la pestaña
         document.addEventListener("visibilitychange", function(){
           if(document.visibilityState==="visible" && !isPlaying) tryPlay();
         });
-        // Reintento tras carga completa
+        // Reintentos agresivos tras carga
         window.addEventListener("load", tryPlay);
-        setTimeout(tryPlay, 1000);
+        setTimeout(tryPlay, 500);
+        setTimeout(tryPlay, 1500);
+        setTimeout(tryPlay, 3000);
       })();
 
       // Página 3 ahora es foto única full-frame, sin carrusel
