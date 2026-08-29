@@ -29,7 +29,7 @@ async function optimizeImages() {
   }
   const files = fs.readdirSync(INPUT_DIR).filter(f => /\.(jpg|jpeg|png)$/i.test(f) && !f.includes("-") );
   // Filtrar solo las usadas en la invitacion para no procesar todo si hay muchas
-  const allowList = ["01.png","02.png","03.png","04.jpg","principal_hero.png","IMG_4963.jpg","IMG_5283.PNG","IMG_4072.jpg","IMG_4074.jpg","IMG_1505.jpg","IMG_3029.jpg"];
+  const allowList = ["01.png","02.png","03.png","04.jpg","principal_hero.png","IMG_4963.jpg","IMG_5283.PNG","IMG_4072.jpg","IMG_4074.jpg","IMG_1505.jpg","IMG_3029.jpg","hero_nuevo.jpeg"];
   const toProcess = files.filter(f => allowList.includes(f));
   console.log(`Optimizando ${toProcess.length} imágenes: ${toProcess.join(", ")}`);
   for (const file of toProcess) {
